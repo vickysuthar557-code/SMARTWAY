@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smartway - Login & Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Exact Mockup Architecture Match Styles */
+        .auth-container { max-width: 420px; margin: 30px auto; padding: 0 20px; }
+        
+        .logo-area { text-align: center; margin-bottom: 30px; }
+        .logo-area i { font-size: 56px; color: var(--primary); filter: drop-shadow(0 0 15px rgba(255,140,0,0.6)); }
+        .logo-area h1 { font-size: 28px; font-weight: 800; margin-top: 10px; letter-spacing: 2px; color: #ffffff; }
+
+        .tab-buttons { 
+            display: flex; gap: 10px; margin-bottom: 25px; 
+            background: rgba(15, 23, 42, 0.6); padding: 6px; border-radius: 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .tab-btn { 
+            flex: 1; padding: 14px; border: none; border-radius: 14px; 
+            background: transparent; color: #94a3b8; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; letter-spacing: 1px;
+        }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); 
+            color: white; 
+            box-shadow: 0 6px 15px rgba(255, 140, 0, 0.35); 
+        }
+
+        /* Form Card Structure matching Image 1000432339 */
+        .auth-card {
+            background: rgba(30, 41, 59, 0.35) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 28px !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 30px 22px !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .form-group { margin-bottom: 20px; width: 100%; }
+        .form-group label { 
+            display: block; font-size: 12px; font-weight: 700; 
+            color: #94a3b8; margin-bottom: 10px; text-align: left; 
+            letter-spacing: 0.8px; 
+        }
+        
+        /* Premium Custom Embedded Full-Width Input fields */
+        .form-group input, .select-wrapper-theme select { 
+            width: 100% !important; 
+            box-sizing: border-box !important; 
+            display: block !important;
+            padding: 16px 20px !important;
+            background: #111827 !important; 
+            border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            outline: none !important;
+            transition: all 0.25s ease !important;
+        }
+
+        .form-group input:focus, .select-wrapper-theme select:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.2) !important;
+        }
+
+        /* Beautiful Orange Gradient Button Overrides */
+        .btn-gradient { 
+            width: 100% !important; 
+            padding: 16px !important;
+            border-radius: 18px !important;
+            border: none !important;
+            font-weight: 800 !important;
+            font-size: 14px !important;
+            color: white !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            transition: 0.2s ease !important;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important; 
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.3) !important; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-gradient:active { transform: scale(0.97); }
+        
+        /* QR Code Module Section Styling */
+        .qr-section { 
+            background: rgba(17, 24, 39, 0.8); border-radius: 24px; padding: 20px; 
+            margin: 20px 0; text-align: center; border: 1px dashed rgba(255, 140, 0, 0.3);
+            animation: fadeIn 0.4s ease;
+        }
+        .qr-image-wrapper {
+            background: white; width: 160px; height: 160px; border-radius: 16px; 
+            padding: 8px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .qr-image-wrapper img { width: 100%; height: 100%; object-fit: contain; }
+        .upi-id { font-weight: 800; color: var(--primary); font-size: 12px; background: rgba(255, 140, 0, 0.08); padding: 8px 16px; border-radius: 10px; display: inline-block; word-break: break-all; }
+        
+        .verification-notice-bar { font-size: 11px; color: #94a3b8; margin-top: 12px; margin-bottom: 20px; text-align: center; line-height: 1.5; font-weight: 600; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="logo-area">
+            <i class="fab fa-bitcoin"></i>
+            <h1>SMARTWAY</h1>
+            <p style="color: #94a3b8; font-size: 13px; font-weight: 600; margin-top: 4px;">Next-Gen Mining Ecosystem</p>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="btn-login" onclick="switchTab('login')">LOGIN</button>
+            <button class="tab-btn" id="btn-reg" onclick="switchTab('register')">REGISTER</button>
+        </div>
+
+        <div id="login-form" class="auth-card">
+            <div class="form-group">
+                <label>PHONE NUMBER</label>
+                <input type="number" id="login-phone" placeholder="Enter Registered Phone" required>
+            </div>
+            <div class="form-group">
+                <label>PASSWORD</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button class="btn-gradient" onclick="window.handleUserLogin()">
+                <i class="fas fa-sign-in-alt"></i> SECURE LOGIN
+            </button>
+        </div>
+
+        <div id="register-form" class="auth-card hidden">
+            <div class="form-group">
+                <label>FULL NAME</label>
+                <input type="text" id="reg-name" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label>WHATSAPP NUMBER</label>
+                <input type="number" id="reg-phone" placeholder="WhatsApp Number">
+            </div>
+            <div class="form-group">
+                <label>PASSWORD</label>
+                <input type="password" id="reg-password" placeholder="Set Secure Password">
+            </div>
+            <div class="form-group">
+                <label>REFERRER ID (PHONE NUMBER)</label>
+                <input type="text" id="reg-referrer-id" placeholder="Referrer Phone (Optional)">
+            </div>
+            
+            <div class="form-group">
+                <label>CHOOSE MINING PACKAGE</label>
+                <div class="select-wrapper-theme">
+                    <select id="package-select" onchange="updateDynamicPayment()">
+                        <option value="100">Trial - ₹100 (10coin/day | Rate: 2Coin/30Min.)</option>
+                        <option value="1000">Bronze - ₹1000 (75Coin/day | Rate: 10/cycle)</option>
+                        <option value="2000">Silver - ₹2000 (Cap: 100Coin/day | Rate: 15/cycle)</option>
+                        <option value="3000">Gold - ₹3000 (Cap: 300/day | Rate: 30/cycle)</option>
+                        <option value="5000">Platinum - ₹5000 (Cap: 400/day | Rate: 50/cycle)</option>
+                        <option value="10000">Diamond - ₹10000 (Cap: 500/day | Rate: 110/cycle)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="qr-section" id="payment-area">
+                <p style="font-size: 14px; margin-bottom: 12px; font-weight: 800; color: #ffffff;">
+                    Pay ₹<span id="display-amt">100</span> to Activate
+                </p>
+                <div class="qr-image-wrapper">
+                    <img src="" id="admin-qr" alt="Payment QR Code">
+                </div>
+                <div class="upi-id" id="live-upi-id">UPI: Fetching Realtime...</div>
+            </div>
+
+            <div class="form-group">
+                <label>TRANSACTION DETAILS</label>
+                <input type="text" id="trans-details" placeholder="Enter 12-Digit UTR / Ref No.">
+            </div>
+            
+            <p class="verification-notice-bar">
+                <i class="fas fa-info-circle" style="color: var(--primary);"></i> Admin will verify your payment and activate your account within 60 minutes.
+            </p>
+
+            <button class="btn-gradient" onclick="window.handleRegistration()">
+                <i class="fas fa-user-plus"></i> CREATE ACCOUNT
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>
+    <script src="app.js"></script>
+    <script>
+        function switchTab(type) {
+            const loginF = document.getElementById('login-form');
+            const regF = document.getElementById('register-form');
+            const bLogin = document.getElementById('btn-login');
+            const bReg = document.getElementById('btn-reg');
+
+            if(type === 'login') {
+                loginF.classList.remove('hidden');
+                regF.classList.add('hidden');
+                bLogin.classList.add('active');
+                bReg.classList.remove('active');
+            } else {
+                loginF.classList.add('hidden');
+                regF.classList.remove('hidden');
+                bReg.classList.add('active');
+                bLogin.classList.remove('active');
+                updateDynamicPayment();
+            }
+        }
+
+        async function updateDynamicPayment() {
+            const pkgAmt = document.getElementById('package-select').value;
+            const displayAmtEl = document.getElementById('display-amt');
+            if (displayAmtEl) displayAmtEl.innerText = pkgAmt;
+            
+            let adminUPI = "ssm@ybl"; 
+            
+            if (typeof sb !== 'undefined' && sb !== null) {
+                try {
+                    const { data, error } = await sb.from('app_settings').select('admin_upi').order('id', { ascending: false }).limit(1);
+                    if (!error && data && data.length > 0 && data[0].admin_upi) {
+                        adminUPI = data[0].admin_upi;
+                        console.log("Realtime UPI Fetched Successfully:", adminUPI);
+                    } else {
+                        console.warn("Supabase returned empty settings or error, using default.");
+                    }
+                } catch(e) { 
+                    console.error("Failed to query live settings table:", e); 
+                }
+            }
+            
+            const qrImg = document.getElementById('admin-qr');
+            if (qrImg) {
+                const qrData = `upi://pay?pa=${adminUPI}&am=${pkgAmt}&cu=INR&tn=SmartwayPlan${pkgAmt}`;
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+            }
+            
+            const upiTextEl = document.getElementById('live-upi-id');
+            if (upiTextEl) {
+                upiTextEl.innerText = `UPI: ${adminUPI}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has('ref')) {
+                const refField = document.getElementById('reg-referrer-id');
+                if (refField) refField.value = urlParams.get('ref');
+                switchTab('register');
+            }
+            
+            setTimeout(() => {
+                updateDynamicPayment();
+            }, 800); 
+        });
+    </script>
+</body>
+</html>
