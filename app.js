@@ -165,21 +165,39 @@ window.logout = () => {
 };
 
 // ==========================================
-// DYNAMIC 3X LIMIT & DEGRADED CALCULATOR ENGINE
+// DYNAMIC 3X LIMIT & DEGRADED CALCULATOR ENGINE (RE-BUILT FOR TRIAL COMMISSION)
 // ==========================================
 async function calculateFinalPower(user) {
     if (!user) return { finalRate: 10, finalCap: 100 }; 
     
+    // Rule 1: Agar account degraded hai, toh direct minimal limit return karein
     if (user.is_degraded === true) {
         return { finalRate: 2, finalCap: 10 }; 
     }
 
-    const config = miningConfigs[user.package_id] || miningConfigs['100'];
-    let finalRate = (config.cycle || 10) + (parseFloat(user.rate_boost) || 0);
-    let finalCap = (config.cap || 100) + (parseFloat(user.cap_boost) || 0);
+    let baseRate = 10;
+    let baseCap = 100;
+
+    // Rule 2: Check for Trial Package User
+    if (user.package_id === '100' || user.package_id === 'Trial Package — ₹100' || user.package_id === 100) {
+        console.log("Current user is on Trial Plan. Allowing base limits + referral rewards.");
+        // Trial ki asli base limits setup karein
+        baseRate = 2; 
+        baseCap = 10;
+    } else {
+        // Real paid packages ke liye config file se base rate aur cap uthein
+        const config = miningConfigs[user.package_id] || miningConfigs['100'];
+        baseRate = config.cycle || 10;
+        baseCap = config.cap || 100;
+    }
+
+    // Rule 3: FINAL MATHEMATICAL ADDITION (SABHI USERS KE LIYE)
+    // Ab chahe user Trial ho ya Paid, use referral networks se mila hua rate_boost aur cap_boost milega!
+    let finalRate = baseRate + (parseFloat(user.rate_boost) || 0);
+    let finalCap = baseCap + (parseFloat(user.cap_boost) || 0);
+    
     return { finalRate, finalCap };
 }
-
 // ==========================================
 // DASHBOARD NAVIGATION & DATA ENGINE
 // ==========================================
