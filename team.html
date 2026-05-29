@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Team - Smartway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #f1f5f9; padding-bottom: 120px; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        
+        .team-header { 
+            background: #1e293b; color: white; padding: 35px 20px; 
+            border-radius: 0 0 35px 35px; text-align: center;
+            box-shadow: 0 10px 25px rgba(30, 41, 59, 0.15);
+        }
+        .team-header h2 { font-weight: 800; font-size: 24px; letter-spacing: 0.5px; }
+        .team-header p { margin: 8px 0 0 0; color: #94a3b8; font-weight: 700; font-size: 14px; }
+        #total-members-count { color: #ff8c00; font-size: 16px; font-weight: 800; }
+
+        .member-item { 
+            background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); color: #1e293b;
+            animation: slideUp 0.4s ease;
+        }
+        
+        /* 🌟 LEVEL COLOR STRATEGIES BADGES (SUPPORTS 10-LEVELS) */
+        .lvl-badge { color: white; padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .lvl-1 { background: #22c55e; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.2); }
+        .lvl-2 { background: #38bdf8; box-shadow: 0 4px 10px rgba(56, 189, 248, 0.2); }
+        .lvl-3 { background: #fbbf24; box-shadow: 0 4px 10px rgba(251, 191, 36, 0.2); }
+        .lvl-4 { background: #a78bfa; box-shadow: 0 4px 10px rgba(167, 139, 250, 0.2); }
+        .lvl-5 { background: #ec4899; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.2); }
+        .lvl-6 { background: #6366f1; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2); }
+        .lvl-7 { background: #14b8a6; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.2); }
+        .lvl-8 { background: #f97316; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2); }
+        .lvl-9 { background: #ef4444; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+        .lvl-10 { background: #6b7280; box-shadow: 0 4px 10px rgba(107, 114, 128, 0.2); }
+
+        /* 🌟 FLOATING MENU OVERRIDES BAR */
+        .bottom-nav {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 450px; background: #1e293b; border-radius: 25px;
+            display: flex; justify-content: space-around; padding: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999;
+        }
+        .nav-item { color: #94a3b8; font-size: 20px; cursor: pointer; transition: 0.3s; padding: 8px 16px; border-radius: 14px; }
+        .nav-item.active { color: white; background: #ff8c00; }
+
+        @keyframes slideUp { from { opacity:0; transform: translateY(15px); } to { opacity:1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="team-header">
+        <h2 style="margin: 0;">My Network</h2>
+        <p>Total Downline Members: <span id="total-members-count">0</span></p>
+    </div>
+
+    <div class="container">
+        <div id="team-list">
+            <p style="text-align: center; color: #64748b; font-weight: 600; margin-top: 30px;">
+                <i class="fas fa-spinner fa-spin" style="color: #ff8c00; margin-right: 8px;"></i> Fetching your team network...
+            </p>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-home"></i></div>
+        <div class="nav-item" onclick="location.href='refer.html'"><i class="fas fa-rocket"></i></div>
+        <div class="nav-item active"><i class="fas fa-user-plus"></i></div>
+        <div class="nav-item" onclick="window.logout()"><i class="fas fa-sign-out-alt"></i></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>
+    <script src="app.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', async () => {
+            // FIXED: Safe dynamic multi-gateway session authorization
+            if(!localStorage.getItem('user_id') && !localStorage.getItem('user_phone')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                // Trigger recursive tree compilations from app.js engine
+                if(typeof window.loadMultiLevelTeam === 'function') {
+                    await window.loadMultiLevelTeam();
+                } else {
+                    document.getElementById('team-list').innerHTML = 
+                        '<p style="text-align:center; color:#ef4444; font-weight:600;"><i class="fas fa-exclamation-triangle"></i> Engine handler loadMultiLevelTeam missing in app.js</p>';
+                }
+            } catch (err) {
+                console.error("Network tree compilation crash:", err);
+                document.getElementById('team-list').innerHTML = 
+                    '<p style="text-align:center; color:#ef4444; font-weight:600;">Failed to compile downline tree network.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
