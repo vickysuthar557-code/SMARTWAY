@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smartway Dashboard - Premium Mining & Earn</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ================= CRYPTO BRAND LOGO & MINIMAL PHONE PROFILE STYLES ================= */
+        .crypto-brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0 10px 0;
+            padding: 5px 0;
+        }
+        .brand-logo-icon {
+            font-size: 26px;
+            color: #ff8c00;
+            filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.6));
+            animation: spinGlow 4s linear infinite;
+        }
+        .brand-title-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        @keyframes spinGlow {
+            0% { transform: rotate(0deg); filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.6)); }
+            50% { filter: drop-shadow(0 0 18px rgba(255, 140, 0, 0.9)); }
+            100% { transform: rotate(360deg); filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.6)); }
+        }
+
+        .profile-phone-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 8px 16px;
+            border-radius: 30px;
+            width: fit-content;
+            margin: 0 auto 20px auto;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.02);
+        }
+        .profile-phone-icon {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        .profile-phone-number {
+            color: #cbd5e1;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .earning-guide-container {
+            margin: 20px 0 80px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .tg-support-card {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(29, 78, 216, 0.4) 0%, rgba(2, 132, 199, 0.4) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 15px;
+            border-radius: 16px;
+            text-decoration: none;
+            box-shadow: 0 4px 20px rgba(2, 132, 199, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tg-support-card:active {
+            transform: scale(0.98);
+        }
+        .tg-icon-box {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .tg-support-card svg { display: block; }
+        .tg-text-box {
+            flex-grow: 1;
+            padding-left: 15px;
+        }
+        .tg-text-box h4 {
+            color: #ffffff;
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .tg-text-box p {
+            color: #e2e8f0;
+            margin: 0;
+            font-size: 11px;
+            opacity: 0.85;
+            line-height: 1.4;
+        }
+        .tg-arrow {
+            color: #38bdf8;
+            font-size: 16px;
+            font-weight: bold;
+            padding-right: 5px;
+        }
+        .info-premium-card {
+            position: relative;
+            padding: 18px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .green-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .blue-badge {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .info-premium-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: #f8fafc;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .plan-description {
+            margin: 0;
+            font-size: 12.5px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .plan-description strong {
+            color: #4ade80;
+            font-weight: 600;
+        }
+        .subtitle-text {
+            margin: 0 0 14px 0;
+            font-size: 11.5px;
+            color: #94a3b8;
+        }
+        .passive-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .grid-item {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px 4px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .level-lbl {
+            font-size: 10px;
+            color: #64748b;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+        .bonus-val {
+            font-size: 14px;
+            color: #38bdf8;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+        }
+        
+        /* Payout history tracking classes */
+        .status-pending { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+        .status-approved { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="crypto-brand-header">
+            <i class="fas fa-cubes brand-logo-icon"></i>
+            <span class="brand-title-text">Smartway</span>
+        </div>
+
+        <div class="profile-phone-row">
+            <i class="fas fa-user-circle profile-phone-icon"></i>
+            <span class="profile-phone-number" id="profile-display-phone">Loading...</span>
+        </div>
+
+        <a href="admin.html" id="admin-panel-link">
+            <i class="fas fa-user-shield"></i> OPEN ADMIN PANEL
+        </a>
+        
+        <div class="degraded-alert-box" id="account-degraded-warning">
+            <div class="alert-icon-wrapper">
+                <i class="fas fa-exclamation-triangle fa-fade"></i>
+            </div>
+            <div class="alert-text-node">
+                <b>LIMIT EXCEEDED (3X):</b><br>
+                Bhai, aapki plan earnings 3X limit cross kar chuki h! Aapka account temporary Trial mode me chal raha h. Purani speed aur referral commission wapas unfreeze karne ke liye account upgrade recharge karein!
+            </div>
+        </div>
+        
+        <div class="top-stats">
+            <div class="stat-card glass-panel">
+                <div class="icon-circle">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <h2 id="wallet-balance">₹0.00</h2>
+                <p>Wallet Balance</p>
+            </div>
+            
+            <div class="stat-card glass-panel relative-node">
+                <div class="upgrade-badge" onclick="window.openUpgradeModal()">
+                    <i class="fas fa-arrow-up"></i> UPGRADE
+                </div>
+                <div class="icon-circle tier-color">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h2 id="current-user-plan">Fetching...</h2>
+                <p>Current Package</p>
+            </div>
+        </div>
+
+        <div class="mining-container glass-panel">
+            <h3 class="section-title">Mining Center</h3>
+            
+            <div class="coin-balance-big">
+                <div class="neon-coin-glow">
+                    <img src="https://cdn-icons-png.flaticon.com/512/217/217853.png" alt="coin" width="36">
+                </div>
+                <span id="coin-count">0.00</span> <small class="coin-suffix">SMC</small>
+            </div>
+
+            <div id="cycle-timer-box" class="timer-badge-glow">
+                <span class="pulse-dot"></span> Mining Ends: <span id="timer-text">30:00</span>
+            </div>
+
+            <div class="mining-trigger-outer">
+                <div class="outer-circle" id="mining-trigger" onclick="window.startMiningCycle()">
+                    <div class="inner-circle">
+                        <i class="fab fa-bitcoin animate-spin-slow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mining-info-bar">
+                <div class="info-row-cap">
+                    <span>Capping Left:</span>
+                    <strong id="cap-left">0</strong> <span class="divider">/</span> <span id="cap-max">100</span>
+                </div>
+                <div class="info-row-rate" id="rate-info">
+                    Rate: 10 SMC / Cycle
+                </div>
+            </div>
+        </div>
+
+        <div class="rate-card glass-panel">
+            <div class="rate-row">
+                <div>
+                    <p class="chart-tagline">SMC LIVE PRICE CHART</p>
+                    <div class="rate-value" id="current-coin-rate-text">₹1.00</div>
+                </div>
+                
+                <div class="timeframe-selector-wrap">
+                    <div class="tf-btn active" onclick="window.changeTimeframe('1M', this)">1M</div>
+                    <div class="tf-btn" onclick="window.changeTimeframe('5M', this)">5M</div>
+                    <div class="tf-btn" onclick="window.changeTimeframe('1H', this)">1H</div>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="rateChartLive"></canvas>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button class="btn-action btn-convert" onclick="window.openSellModal()">
+                <i class="fas fa-sync-alt"></i> CONVERT COINS
+            </button>
+            <button class="btn-action btn-withdraw" onclick="window.showWithdrawModal()">
+                <i class="fas fa-paper-plane"></i> WITHDRAW
+            </button>
+        </div>
+
+        <div class="earning-guide-container">
+            <a href="https://t.me/smcmining" target="_blank" class="tg-support-card">
+                <div class="tg-icon-box">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15.15-.3.3-.45.45l-6.2 6.2c-.15.15-.4.15-.55 0l-2.5-2.5c-.15-.15-.15-.4 0-.55l.55-.55c.15-.15.4-.15.55 0l1.68 1.68 5.37-5.37c.15-.15.4-.15.55 0l.55.55c.2.15.2.4 0 .57z" opacity=".2"/>
+                        <path d="M19.35 10.04L5.44 4.54c-.65-.26-1.24.18-1.04.97l2.42 8.94c.12.44.38.61.75.4l2.12-1.56 2.45 1.8c.45.25.78.12.9-.42l3.12-14.7c.16-.65-.25-1-.81-.78z"/>
+                    </svg>
+                </div>
+                <div class="tg-text-box">
+                    <h4>Join Official Telegram</h4>
+                    <p>Join for regular system updates and official support</p>
+                </div>
+                <div class="tg-arrow"><i class="fas fa-chevron-right"></i></div>
+            </a>
+
+            <div class="info-premium-card glass-panel">
+                <div class="card-badge green-badge">🚀 Speed Up</div>
+                <h3>Referral Plan Benefits</h3>
+                <p class="plan-description">
+                   Invite your friends to the platform by Referral <strong>Level 1 to Level 5</strong>. Your daily mining limit & per cycle speed will be increased continuously.
+                </p>
+            </div>
+
+            <div class="info-premium-card glass-panel">
+                <div class="card-badge blue-badge">💰 Lifetime Roi</div>
+                <h3>Passive Income Plan</h3>
+                <p class="subtitle-text">Share in the daily mining profits of your active Downline team:</p>
+                
+                <div class="passive-grid">
+                    <div class="grid-item">
+                        <span class="level-lbl">L1 Team</span>
+                        <span class="bonus-val">5%</span>
+                    </div>
+                    <div class="grid-item">
+                        <span class="level-lbl">L2 Team</span>
+                        <span class="bonus-val">3%</span>
+                    </div>
+                    <div class="grid-item">
+                        <span class="level-lbl">L3 Team</span>
+                        <span class="bonus-val">2%</span>
+                    </div>
+                    <div class="grid-item">
+                        <span class="level-lbl">L4 & L5</span>
+                        <span class="bonus-val">1%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sell-coins-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h3>Convert SMC to INR</h3>
+            <p class="modal-subtext">Available Coins: <span id="modal-available-coins">0.00</span></p>
+            <div class="input-wrapper-theme">
+                <i class="fas fa-coins input-icon"></i>
+                <input type="number" id="custom-sell-amount" placeholder="Kitne Coins bechne hain?">
+            </div>
+            <div class="modal-btns">
+                <button class="btn-action btn-withdraw flex-2" onclick="window.processCustomSell()">SELL COINS</button>
+                <button class="btn-action btn-convert flex-1" onclick="window.closeSellModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="upgrade-plan-modal" class="modal-overlay">
+        <div class="modal-content glass-panel scrollable-modal">
+            <h3>Upgrade Mining Package</h3>
+            <label class="input-label-tag">CHOOSE NEW PACKAGE</label>
+            
+            <div class="select-wrapper-theme">
+                <select id="modal-package-select" onchange="window.updateUpgradePaymentQR()">
+                    <option value="1000">Bronze - ₹1000 (75 Coin/day | Rate: 10/cycle)</option>
+                    <option value="2000">Silver - ₹2000 (Cap: 100 Coin/day | Rate: 15/cycle)</option>
+                    <option value="3000">Gold - ₹3000 (Cap: 300/day | Rate: 30/cycle)</option>
+                    <option value="5000">Platinum - ₹5000 (Cap: 400/day | Rate: 50/cycle)</option>
+                    <option value="10000">Diamond - ₹10000 (Cap: 500/day | Rate: 110/cycle)</option>
+                </select>
+            </div>
+
+            <div class="qr-payment-box">
+                <p class="qr-header-instruction">Pay ₹<span id="upgrade-display-amt">1000</span> to Admin UPI</p>
+                <div class="qr-image-wrapper">
+                    <img src="" id="upgrade-admin-qr" alt="Payment QR Ready">
+                </div>
+                <div id="upgrade-live-upi" class="live-upi-string">UPI: Loading...</div>
+            </div>
+
+            <div class="input-wrapper-theme">
+                <i class="fas fa-receipt input-icon"></i>
+                <input type="text" id="upgrade-utr-input" placeholder="Enter 12-Digit Transaction UTR">
+            </div>
+            
+            <div class="modal-btns">
+                <button class="btn-action btn-withdraw flex-2" onclick="window.submitUpgradeRequest()">SUBMIT REQUEST</button>
+                <button class="btn-action btn-convert flex-1" onclick="window.closeUpgradeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="max-height: 85vh; overflow-y: auto;">
+            <h3>Withdraw Funds</h3>
+            
+            <div class="input-wrapper-theme">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" id="bank-holder" placeholder="Account Holder Name">
+            </div>
+            <div class="input-wrapper-theme">
+                <i class="fas fa-university input-icon"></i>
+                <input type="text" id="bank-account" placeholder="Bank Account Number">
+            </div>
+            <div class="input-wrapper-theme">
+                <i class="fas fa-code input-icon"></i>
+                <input type="text" id="bank-ifsc" placeholder="IFSC Code">
+            </div>
+            <div class="input-wrapper-theme">
+                <i class="fas fa-indian-rupee-sign input-icon"></i>
+                <input type="number" id="withdraw-amount" placeholder="Enter Amount">
+            </div>
+            
+            <div class="modal-btns" style="margin-bottom: 20px;">
+                <button class="btn-action btn-withdraw flex-2" onclick="window.submitWithdrawal()">SUBMIT</button>
+                <button class="btn-action btn-convert flex-1" onclick="window.hideWithdrawModal()">CANCEL</button>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 15px 0;">
+            <h4 style="text-align: left; margin: 0 0 10px 0; color: #f8fafc; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Your Withdrawal History</h4>
+            <div id="history-list" style="display: block; width: 100%;">
+                 <p style="text-align: center; color: #64748b; font-size: 12px;">Loading statement logs...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active"><i class="fas fa-home"></i></div>
+        <div class="nav-item" onclick="location.href='refer.html'"><i class="fas fa-rocket"></i></div>
+        <div class="nav-item" onclick="location.href='team.html'"><i class="fas fa-user-plus"></i></div>
+        <div class="nav-item" onclick="window.logout()"><i class="fas fa-sign-out-alt"></i></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+    <script>
+        window.showWithdrawModal = () => { 
+            document.getElementById('withdraw-modal').style.display = 'flex'; 
+            if(typeof window.loadHistory === 'function') { window.loadHistory(); }
+        };
+        window.hideWithdrawModal = () => { document.getElementById('withdraw-modal').style.display = 'none'; };
+        
+        window.openSellModal = () => {
+            document.getElementById('custom-sell-amount').value = '';
+            document.getElementById('modal-available-coins').innerText = document.getElementById('coin-count').innerText;
+            document.getElementById('sell-coins-modal').style.display = 'flex';
+        };
+        window.closeSellModal = () => { document.getElementById('sell-coins-modal').style.display = 'none'; };
+
+        window.openUpgradeModal = () => {
+            document.getElementById('upgrade-utr-input').value = '';
+            document.getElementById('upgrade-plan-modal').style.display = 'flex';
+            window.updateUpgradePaymentQR();
+        };
+        window.closeUpgradeModal = () => { document.getElementById('upgrade-plan-modal').style.display = 'none'; };
+
+        window.chartLocalDataPoints = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+
+        window.buildFreshLiveChart = (freshPointsArray) => {
+            if (window.liveChart) { window.liveChart.destroy(); }
+            if(freshPointsArray && freshPointsArray.length === 10) { window.chartLocalDataPoints = freshPointsArray; }
+
+            const ctx = document.getElementById('rateChartLive').getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 130);
+            grad.addColorStop(0, 'rgba(255, 140, 0, 0.35)');
+            grad.addColorStop(1, 'rgba(255, 140, 0, 0)');
+
+            window.liveChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    datasets: [{
+                        data: window.chartLocalDataPoints.map(v => Number(v)),
+                        borderColor: '#ff8c00',
+                        borderWidth: 3,
+                        fill: true,
+                        backgroundColor: grad,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ffaa33',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: { 
+                    maintainAspectRatio: false, 
+                    responsive: true,
+                    animation: { duration: 400 },
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { display: false }, 
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.03)' },
+                            ticks: { 
+                                color: '#94a3b8', 
+                                font: { size: 10, weight: '600' },
+                                callback: function(value) { return '₹' + Number(value).toFixed(2); }
+                            },
+                            beginAtZero: false,
+                            grace: '20%'
+                        } 
+                    } 
+                }
+            });
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const uid = localStorage.getItem('user_id');
+            const uphone = localStorage.getItem('user_phone') || 'Not Set'; 
+            
+            if(!uid) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const phoneProfileText = document.getElementById('profile-display-phone');
+            if(phoneProfileText) {
+                phoneProfileText.innerText = uphone;
+            }
+
+            window.buildFreshLiveChart();
+            try {
+                await window.loadDashboardData();
+                await window.checkActiveMining();
+                if(typeof window.startChartLoop === 'function') { window.startChartLoop(); }
+            } catch (err) { console.error("Initialization pipeline hitch:", err); }
+            
+            if(localStorage.getItem('is_admin') === 'true'){
+                const adminBtn = document.getElementById('admin-panel-link');
+                if(adminBtn) adminBtn.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
