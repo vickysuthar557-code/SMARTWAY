@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refer & Earn - Smartway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #f1f5f9; padding-bottom: 120px; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        
+        .refer-card { 
+            background: white; border-radius: 30px; padding: 30px; text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 20px; color: #1e293b;
+        }
+        .invite-icon { font-size: 60px; color: #ff8c00; margin-bottom: 20px; }
+        
+        .link-box { 
+            background: #f8fafc; border: 2px dashed #cbd5e1; padding: 15px; 
+            border-radius: 15px; margin: 20px 0; display: flex; justify-content: space-between; 
+            align-items: center; gap: 10px;
+        }
+        .link-text { 
+            font-weight: 700; color: #1e293b; font-size: 14px; overflow: hidden; 
+            text-overflow: ellipsis; white-space: nowrap; max-width: 75%; text-align: left;
+        }
+        .copy-btn { 
+            background: #ff8c00; color: white; border: none; padding: 8px 15px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
+        }
+        .copy-btn:active { transform: scale(0.95); }
+
+        /* 🌟 INCOME CARD LAYOUT MODULE */
+        .income-card {
+            margin-top: 20px; background: #1e293b; color: white;
+            border-radius: 24px; padding: 20px; box-shadow: 0 10px 25px rgba(30,41,59,0.15);
+        }
+        .income-card h4 { margin-top: 0; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; color: #ff8c00; }
+
+        /* 🌟 BOTTOM STICKY NAVIGATION STYLES */
+        .bottom-nav {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 450px; background: #1e293b; border-radius: 25px;
+            display: flex; justify-content: space-around; padding: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999;
+        }
+        .nav-item { color: #94a3b8; font-size: 20px; cursor: pointer; transition: 0.3s; padding: 8px 16px; border-radius: 14px; }
+        .nav-item.active { color: white; background: #ff8c00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align: center; color: #0f172a; margin-top: 10px; font-weight: 800;">Invite & Earn</h2>
+        
+        <div class="refer-card">
+            <i class="fas fa-rocket invite-icon"></i>
+            <h3 style="font-weight: 800; margin: 0 0 10px 0;">Share Your Link</h3>
+            <p style="color: #64748b; font-size: 14px; line-height: 1.5; font-weight: 600;">
+                Aapke link se join hone wale har member ka aapko 5-level tak regular commission milega.
+            </p>
+            
+            <div class="link-box">
+                <span class="link-text" id="referral-url">Loading URL...</span>
+                <button class="copy-btn" onclick="copyLink()">COPY</button>
+            </div>
+        </div>
+
+        <div class="income-card">
+            <h4>Income Structure Blueprint</h4>
+            <ul style="list-style: none; padding: 0; font-size: 14px; font-weight: 700; margin: 0;">
+                <li style="padding: 12px 0; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;">
+                    <span>Direct (Level 1)</span> <span style="color: #22c55e;">5% Commission</span>
+                </li>
+                <li style="padding: 12px 0; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;">
+                    <span>Indirect (Level 2)</span> <span style="color: #38bdf8;">3% Commission</span>
+                </li>
+                <li style="padding: 12px 0; border-bottom: 1px solid #334155; display: flex; justify-content: space-between;">
+                    <span>Indirect (Level 3)</span> <span style="color: #fbbf24;">2% Commission</span>
+                </li>
+                <li style="padding: 12px 0; display: flex; justify-content: space-between;">
+                    <span>Network (Level 4 & 5)</span> <span style="color: #a78bfa;">1% Commission</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fas fa-home"></i></div>
+        <div class="nav-item active"><i class="fas fa-rocket"></i></div>
+        <div class="nav-item" onclick="location.href='team.html'"><i class="fas fa-user-plus"></i></div>
+        <div class="nav-item" onclick="window.logout()"><i class="fas fa-sign-out-alt"></i></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>
+    <script src="app.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            // Validation user check authentication block session data
+            const userPhone = localStorage.getItem('user_phone');
+            if(userPhone) {
+                const shareLink = window.location.origin + "/index.html?ref=" + userPhone;
+                document.getElementById('referral-url').innerText = shareLink;
+            } else {
+                document.getElementById('referral-url').innerText = "Session Error. Please Re-login";
+                document.getElementById('referral-url').style.color = "#ef4444";
+            }
+        });
+
+        function copyLink() {
+            const textToCopy = document.getElementById('referral-url').innerText;
+            if(textToCopy.includes("Error") || textToCopy.includes("Loading")) {
+                alert("Bhai thoda wait karo, system url fetch kar raha hai!");
+                return;
+            }
+            
+            // Clipboard modern navigator backup wrapper execution engine
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("Link Copied! Ab ise WhatsApp aur groups me share karein.");
+                }).catch(err => {
+                    console.error("Clipboard fetch failed:", err);
+                });
+            } else {
+                // Fallback selection block for unsafe local environments context
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert("Link Copied! Ab ise share karein.");
+                } catch (err) {
+                    alert("Failed to copy link, please copy manually.");
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+    </script>
+</body>
+</html>
+
