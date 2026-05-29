@@ -1,0 +1,579 @@
+/* ==========================================================================
+   SMARTWAY - CYBERPUNK GLASSMORPHIC PREMIUM DESIGN SYSTEM (2026 UPDATE)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+    --primary: #ff8c00;
+    --primary-glow: rgba(255, 140, 0, 0.25);
+    --primary-dark: #ff5e00;
+    --bg-base: #030712;
+    --glass-bg: rgba(30, 41, 59, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --success: #10b981;
+    --success-glow: rgba(16, 185, 129, 0.2);
+    --danger: #ef4444;
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-base);
+    background-image: 
+        radial-gradient(circle at 10% 15%, rgba(255, 140, 0, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 45%);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 110px;
+    overflow-x: hidden;
+}
+
+.container {
+    padding: 20px;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Premium Glassmorphic Core Framework Panel */
+.glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Operational Admin Header Indicator link */
+#admin-panel-link {
+    display: none;
+    background: var(--danger);
+    color: white;
+    text-align: center;
+    padding: 12px;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    margin-bottom: 20px;
+    transition: 0.3s;
+}
+#admin-panel-link:active { transform: scale(0.97); }
+
+/* Grace Overcap Degradation Alert Warn Elements */
+.degraded-alert-box {
+    display: none;
+    background: var(--danger-gradient);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: white;
+    padding: 16px;
+    border-radius: 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 12px 25px rgba(239, 68, 68, 0.25);
+}
+.alert-icon-wrapper {
+    float: left;
+    width: 25px;
+    font-size: 18px;
+    margin-top: 2px;
+}
+.alert-text-node {
+    margin-left: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+/* Top Twin Dashboard Parameter Rows */
+.top-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.stat-card {
+    padding: 18px 14px;
+    text-align: center;
+    position: relative;
+    transition: 0.3s ease;
+}
+.icon-circle {
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 140, 0, 0.12);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px auto;
+    color: var(--primary);
+    font-size: 16px;
+}
+.icon-circle.tier-color {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success);
+}
+.stat-card h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+.stat-card p {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.relative-node { position: relative; }
+
+/* Fixed Premium Corner Badges */
+.upgrade-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255, 140, 0, 0.25);
+}
+
+/* Central Massive Engine Block Mining Card Setup */
+.mining-container {
+    padding: 25px 20px;
+    text-align: center;
+    margin-bottom: 22px;
+}
+.section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+}
+.coin-balance-big {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.neon-coin-glow {
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+.coin-balance-big span {
+    font-size: 34px;
+    font-weight: 800;
+    color: #f59e0b;
+    letter-spacing: -0.5px;
+}
+.coin-suffix {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    margin-left: 2px;
+    margin-top: 14px;
+}
+
+/* Active Session Dynamic Timers Layout */
+.timer-badge-glow {
+    display: none;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    color: #ff5e00;
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    width: max-content;
+    margin: 0 auto 20px auto;
+    align-items: center;
+    gap: 6px;
+}
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #ff5e00;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #ff5e00;
+    animation: timerPulse 1.2s infinite;
+}
+
+/* Mining Center Core Pulse Buttons Framework Layout */
+.mining-trigger-outer {
+    padding: 15px 0;
+    margin-bottom: 10px;
+}
+.outer-circle {
+    width: 170px;
+    height: 170px;
+    background: radial-gradient(circle, rgba(255,140,0,0.18) 0%, rgba(255,140,0,0.03) 70%);
+    border: 2px dashed rgba(255, 140, 0, 0.25);
+    border-radius: 50%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(255, 140, 0, 0.05);
+    transition: 0.4s ease;
+}
+.inner-circle {
+    width: 115px;
+    height: 115px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(255, 140, 0, 0.35);
+    transition: 0.2s ease;
+}
+.inner-circle i {
+    font-size: 48px;
+    color: white;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+}
+.inner-circle:active { transform: scale(0.94); }
+
+/* Static Info Status Indicators Box */
+.mining-info-bar {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 20px;
+    padding: 14px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.info-row-cap {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+.info-row-cap strong { font-size: 14px; }
+.divider { color: rgba(255,255,255,0.1); margin: 0 2px; }
+.info-row-rate {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.04);
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+/* Crypto Exchange Dynamic Graphs Structure Setup Layout */
+.rate-card {
+    padding: 22px 20px;
+    margin-bottom: 22px;
+}
+.rate-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+.chart-tagline {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+.rate-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-top: 2px;
+    letter-spacing: -0.5px;
+}
+.timeframe-selector-wrap {
+    display: flex;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.02);
+}
+.tf-btn {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-dim);
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 9px;
+    transition: all 0.2s ease;
+}
+.tf-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+.chart-wrapper {
+    height: 125px;
+    margin-top: 10px;
+    position: relative;
+}
+
+/* Primary Execution Actions Buttons Controls Structure Rows */
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.btn-action {
+    padding: 16px;
+    border-radius: 20px;
+    border: none;
+    font-weight: 800;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s ease;
+    width: 100%;
+}
+.btn-convert {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+.btn-withdraw {
+    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
+}
+.btn-action:active { transform: scale(0.96); }
+
+/* Overlays Popups System Core Base Layout Style Elements */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+.modal-content {
+    width: 100%;
+    max-width: 400px;
+    padding: 26px;
+    border-radius: 32px;
+    animation: modalEntrance 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-content h3 {
+    font-size: 18px;
+    color: var(--text-main);
+    text-align: center;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+.modal-subtext {
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-dim);
+    margin-top: -10px;
+    margin-bottom: 16px;
+}
+
+/* Polished Dark Themed Styled Custom Input Nodes */
+.input-wrapper-theme {
+    position: relative;
+    margin-bottom: 16px;
+}
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+}
+.input-wrapper-theme input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    color: white !important;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: 0.25s ease;
+}
+.input-wrapper-theme input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* Custom Styled Select Fields Framework System */
+.input-label-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+    margin-left: 2px;
+}
+.select-wrapper-theme {
+    margin-bottom: 16px;
+}
+.select-wrapper-theme select {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    color: white !important;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    outline: none;
+}
+
+/* Modal Helper Sizing Utilities Classes */
+.scrollable-modal {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.modal-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+
+/* In-App Verification Packages Recharge QRs Component */
+.qr-payment-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px dashed rgba(255, 140, 0, 0.25);
+    border-radius: 24px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: center;
+}
+.qr-header-instruction {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 12px;
+}
+.qr-image-wrapper {
+    background: white;
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
+    padding: 8px;
+    margin: 0 auto 10px auto;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.qr-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.live-upi-string {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--primary);
+    word-break: break-all;
+    background: rgba(255, 140, 0, 0.05);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Standardized Fixed Bottom Nav Tab Layout Menu */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 430px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid var(--glass-border);
+    border-radius: 26px;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+.nav-item {
+    color: #64748b;
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 10px 18px;
+    border-radius: 16px;
+}
+.nav-item.active {
+    color: white;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 6px 15px rgba(255, 140, 0, 0.35);
+    transform: translateY(-2px);
+}
+
+/* System Global Keyframes Keyframe Animations Blocks Modules */
+@keyframes modalEntrance {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes timerPulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
+.animate-spin-slow {
+    animation: slowSpinner 12s linear infinite;
+}
+@keyframes slowSpinner {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Hide Content utility class */
+.hidden { display: none !important; }
+
+/* Custom Scrollbar configuration layout for Premium Panels */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+  
