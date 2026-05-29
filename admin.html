@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smartway Admin - Advanced Control Panel 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #f1f5f9; color: #1e293b; padding: 20px; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .admin-container { max-width: 900px; margin: 0 auto; background: white; border-radius: 30px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px; }
+        .admin-header h1 { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; }
+        .admin-header h1 span { color: #ff8c00; }
+
+        .admin-nav { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
+        .admin-tab { background: #e2e8f0; color: #475569; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .admin-tab.active { background: #1e293b; color: white; }
+
+        .tab-content { animation: fadeIn 0.3s ease; }
+        .hidden { display: none !important; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; text-align: left; }
+        .data-table th { background: #f8fafc; color: #64748b; font-weight: 700; padding: 14px; font-size: 13px; border-bottom: 2px solid #edf2f7; }
+        .data-table td { padding: 14px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #334155; }
+        
+        .btn-s { padding: 6px 12px; border-radius: 8px; border: none; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.2s; text-transform: uppercase; margin-right: 5px; }
+        .btn-app { background: #22c55e; color: white; }
+        .btn-rej { background: #ef4444; color: white; }
+        .btn-s:active { transform: scale(0.95); }
+
+        .settings-card { background: #f8fafc; border-radius: 20px; padding: 20px; max-width: 500px; border: 1px solid #e2e8f0; }
+        .settings-card label { display: block; font-weight: 700; font-size: 13px; color: #475569; margin-bottom: 6px; }
+        .settings-card input { color: black !important; background: white !important; border: 1.5px solid #cbd5e1 !important; margin-bottom: 15px !important; width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 10px; }
+        .btn-save { background: #ff8c00; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Smartway <span>Admin Panel</span></h1>
+            <span style="background: rgba(255,140,0,0.1); color: #ff8c00; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800;">SECURE NODE</span>
+        </div>
+
+        <div class="admin-nav">
+            <div class="admin-tab active" onclick="showTab('approvals', this)">USER APPROVALS</div>
+            <div class="admin-tab" onclick="showTab('upgrades', this)">UPGRADE REQUESTS</div>
+            <div class="admin-tab" onclick="showTab('withdrawals', this)">WITHDRAWALS</div>
+            <div class="admin-tab" onclick="showTab('settings', this)">APP SETTINGS</div>
+            <div class="admin-tab" onclick="location.href='dashboard.html'" style="background: #ef4444; color: white;">BACK TO APP</div>
+        </div>
+
+        <div id="tab-approvals" class="tab-content">
+            <h2 style="margin-bottom: 15px; font-size: 18px; font-weight: 800;">Pending User Registrations</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Details</th>
+                            <th>Package Info</th>
+                            <th>UTR / Transaction ID</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-approvals-list">
+                        <tr><td colspan="4" style="text-align:center; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Fetching registration records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-upgrades" class="tab-content hidden">
+            <h2 style="margin-bottom: 15px; font-size: 18px; font-weight: 800;">Plan Upgrade Requests (3X Unfreezer)</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Details</th>
+                            <th>Old ➔ New Plan</th>
+                            <th>UTR Number</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upgrade-request-list">
+                        <tr><td colspan="4" style="text-align:center; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Fetching upgrade files...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-withdrawals" class="tab-content hidden">
+            <h2 style="margin-bottom: 15px; font-size: 18px; font-weight: 800;">Pending Withdrawals</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Details</th>
+                            <th>Amount Request</th>
+                            <th>Bank Account Details</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-withdrawals-list">
+                        <tr><td colspan="4" style="text-align:center; color:#64748b;"><i class="fas fa-spinner fa-spin"></i> Fetching payment sheets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content hidden">
+            <h2 style="margin-bottom: 15px; font-size: 18px; font-weight: 800;">System Core Configuration</h2>
+            <div class="settings-card">
+                <div>
+                    <label>GLOBAL COIN RATE (INR VALUE PER SMC)</label>
+                    <input type="number" step="0.01" id="new-coin-rate" placeholder="e.g. 1.50">
+                    <button class="btn-save" onclick="window.updateGlobalRate()" style="margin-bottom: 20px;">UPDATE RATE & UPDATE CHART</button>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 15px;">
+                
+                <div>
+                    <label>ADMIN RECEIVER UPI ID</label>
+                    <input type="text" id="admin-upi-id" placeholder="e.g. smartway@ybl">
+                    
+                    <label>MINIMUM WITHDRAWAL REQUIREMENT (₹)</label>
+                    <input type="number" id="min-withdrawal-amt" placeholder="e.g. 100">
+
+                    <label>MAXIMUM WITHDRAWAL LIMIT PER TRANSACTIONS (₹)</label>
+                    <input type="number" id="max-withdrawal-amt" placeholder="e.g. 10000">
+                    
+                    <button class="btn-save" style="background:#1e293b;" onclick="window.saveAdminSettings()">SAVE SYSTEM SETTINGS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>
+    <script src="app.js"></script>
+    <script>
+        window.loadAdminApprovals = async () => {
+            const list = document.getElementById('admin-approvals-list');
+            if(!list || !window.sb) return;
+            
+            const { data, error } = await sb.from('users').select('*').eq('is_approved', false).order('id', { ascending: false });
+            if(error) return console.error(error);
+
+            if(data && data.length > 0) {
+                list.innerHTML = data.map(u => `
+                    <tr>
+                        <td><b>${u.full_name || 'N/A'}</b><br><small>${u.phone_number || 'N/A'}</small></td>
+                        <td><span style="background:#e2e8f0; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">₹${u.package_id}</span></td>
+                        <td style="color:#ff8c00; font-weight:700; font-family:monospace;">${u.utr_number || 'N/A'}</td>
+                        <td>
+                            <button class="btn-s btn-app" onclick="window.approveUser('${u.id}')">APPROVE</button>
+                            <button class="btn-s btn-rej" onclick="window.rejectUser('${u.id}')">REJECT</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">No pending registrations found.</td></tr>';
+            }
+        };
+
+        window.approveUser = async (id) => {
+            if(!confirm("Bhai, kya aap is user ko approve karna chahte hain?")) return;
+            const { error } = await sb.from('users').update({ is_approved: true }).eq('id', id);
+            if(!error) { alert("User Profile Activated Successfully!"); window.loadAdminApprovals(); }
+            else alert(error.message);
+        };
+
+        window.rejectUser = async (id) => {
+            if(!confirm("Kya aap is registration form ko reject/delete karna chahte hain?")) return;
+            const { error } = await sb.from('users').delete().eq('id', id);
+            if(!error) { alert("Registration Form Discarded!"); window.loadAdminApprovals(); }
+            else alert(error.message);
+        };
+
+        window.loadAdminWithdrawals = async () => {
+            const list = document.getElementById('admin-withdrawals-list');
+            if(!list) return;
+
+            const { data, error } = await sb.from('withdrawals').select('*, users(full_name, phone_number)').eq('status', 'pending');
+            if(error) return console.error(error);
+
+            if(data && data.length > 0) {
+                list.innerHTML = data.map(w => {
+                    // FIXED: Robust structural check and deep stringified data parsing to bypass N/A issue
+                    let bank = {};
+                    if (w.bank_details) {
+                        try {
+                            bank = typeof w.bank_details === 'string' ? JSON.parse(w.bank_details) : w.bank_details;
+                        } catch(e) {
+                            console.error("Error parsing withdrawal data packet:", e);
+                            bank = {};
+                        }
+                    }
+                    
+                    const holderName = bank.holder || 'N/A';
+                    const accNumber = bank.acc || bank.account || 'N/A';
+                    const ifscCode = bank.ifsc || 'N/A';
+
+                    return `
+                        <tr>
+                            <td><b>${w.users?.full_name || 'N/A'}</b><br><small>${w.users?.phone_number || 'N/A'}</small></td>
+                            <td><b style="color:#ef4444;">₹${parseFloat(w.amount).toFixed(2)}</b></td>
+                            <td style="font-size:12px; line-height:1.4;">
+                                Name: <b>${holderName}</b><br>
+                                Acc: <b>${accNumber}</b><br>
+                                IFSC: <b>${ifscCode}</b>
+                            </td>
+                            <td>
+                                <button class="btn-s btn-app" onclick="window.resolveWithdrawal('${w.id}', 'approved')">PAY SUCCESS</button>
+                                <button class="btn-s btn-rej" onclick="window.resolveWithdrawal('${w.id}', 'rejected', '${w.user_id}', ${w.amount})">REJECT</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">No pending payout files.</td></tr>';
+            }
+        };
+
+        window.resolveWithdrawal = async (id, finalStatus, userId = null, refundAmt = 0) => {
+            if(!confirm(`Mark this transaction status as ${finalStatus}?`)) return;
+            
+            const { error } = await sb.from('withdrawals').update({ status: finalStatus }).eq('id', id);
+            
+            if(finalStatus === 'rejected' && userId) {
+                const { data: usr } = await sb.from('users').select('wallet_balance').eq('id', userId).single();
+                await sb.from('users').update({ wallet_balance: parseFloat(usr.wallet_balance) + parseFloat(refundAmt) }).eq('id', userId);
+            }
+
+            if(!error) { alert("Payout Status Updated!"); window.loadAdminWithdrawals(); }
+            else alert(error.message);
+        };
+
+        window.loadAdminSettings = async () => {
+            const { data } = await sb.from('app_settings').select('*').single();
+            if(data) {
+                if(document.getElementById('new-coin-rate')) document.getElementById('new-coin-rate').value = data.coin_rate || 1.0;
+                if(document.getElementById('admin-upi-id')) document.getElementById('admin-upi-id').value = data.admin_upi || '';
+                if(document.getElementById('min-withdrawal-amt')) document.getElementById('min-withdrawal-amt').value = data.min_withdrawal || 100;
+                if(document.getElementById('max-withdrawal-amt')) document.getElementById('max-withdrawal-amt').value = data.max_withdrawal || 10000;
+            }
+        };
+
+        window.saveAdminSettings = async () => {
+            const upi = document.getElementById('admin-upi-id').value;
+            const minW = parseInt(document.getElementById('min-withdrawal-amt').value);
+            const maxW = parseInt(document.getElementById('max-withdrawal-amt').value);
+            
+            const { data: settings } = await sb.from('app_settings').select('id').single();
+            
+            const { error } = await sb.from('app_settings').update({
+                admin_upi: upi,
+                min_withdrawal: minW,
+                max_withdrawal: maxW
+            }).eq('id', settings.id);
+
+            if(!error) alert("System Parameter Settings Updated!");
+            else alert("Error updating settings: " + error.message);
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if(localStorage.getItem('is_admin') !== 'true') {
+                alert("Unauthorized Entry! Redirecting...");
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            window.loadAdminApprovals();
+        });
+    </script>
+</body>
+</html>
+
