@@ -118,7 +118,7 @@
             // Clipboard modern navigator backup wrapper execution engine
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    alert("Link Copied! Ab ise WhatsApp aur groups me share karein.");
+                    alert("Link Copied!");
                 }).catch(err => {
                     console.error("Clipboard fetch failed:", err);
                 });
@@ -130,7 +130,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    alert("Link Copied! Ab ise share karein.");
+                    alert("Link Copied!");
                 } catch (err) {
                     alert("Failed to copy link, please copy manually.");
                 }
