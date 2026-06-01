@@ -284,32 +284,38 @@
             </div>
         </div>
 
-        <div class="rate-card glass-panel">
-            <div class="rate-row">
-                <div>
-                    <p class="chart-tagline">SMC LIVE PRICE CHART</p>
-                    <div class="rate-value" id="current-coin-rate-text">₹1.00</div>
-                </div>
-                
-                <div class="timeframe-selector-wrap">
-                    <div class="tf-btn active" onclick="window.changeTimeframe('1M', this)">1M</div>
-                    <div class="tf-btn" onclick="window.changeTimeframe('5M', this)">5M</div>
-                    <div class="tf-btn" onclick="window.changeTimeframe('1H', this)">1H</div>
-                </div>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="rateChartLive"></canvas>
-            </div>
+<div class="rate-card glass-panel" style="display: flex; flex-direction: column; min-height: 400px; padding-bottom: 20px;">
+    <div class="rate-row">
+        <div>
+            <p class="chart-tagline">SMC LIVE PRICE</p>
+            <div class="rate-value" id="current-coin-rate-text">₹0.00</div>
         </div>
+        <div class="timeframe-selector-wrap">
+            <div class="tf-btn active" onclick="window.changeTimeframe('1M', this)">1M</div>
+            <div class="tf-btn" onclick="window.changeTimeframe('5M', this)">5M</div>
+        </div>
+    </div>
 
-        <div class="action-grid">
-            <button class="btn-action btn-convert" onclick="window.openSellModal()">
-                <i class="fas fa-sync-alt"></i> CONVERT COINS
-            </button>
-            <button class="btn-action btn-withdraw" onclick="window.showWithdrawModal()">
-                <i class="fas fa-paper-plane"></i> WITHDRAW
-            </button>
-        </div>
+    <div class="high-low-bar" style="display: flex; justify-content: space-between; padding: 10px 0;">
+        <span style="font-size: 12px; color: #94a3b8;">High: <b id="today-high" style="color: #4ade80;">₹0.00</b></span>
+        <span style="font-size: 12px; color: #94a3b8;">Low: <b id="today-low" style="color: #f87171;">₹0.00</b></span>
+    </div>
+
+    <div class="chart-wrapper" style="flex-grow: 1; position: relative; min-height: 200px; width: 100%; margin-bottom: 20px;">
+        <canvas id="rateChartLive"></canvas>
+    </div>
+</div>
+
+<div style="height: 20px;"></div>
+
+<div class="action-grid">
+    <button class="btn-action btn-convert" onclick="window.openSellModal()">
+        <i class="fas fa-sync-alt"></i> CONVERT COINS
+    </button>
+    <button class="btn-action btn-withdraw" onclick="window.showWithdrawModal()">
+        <i class="fas fa-paper-plane"></i> WITHDRAW
+    </button>
+</div>
 
         <div class="earning-guide-container">
             <a href="https://t.me/smcmining" target="_blank" class="tg-support-card">
@@ -383,11 +389,11 @@
             
             <div class="select-wrapper-theme">
                 <select id="modal-package-select" onchange="window.updateUpgradePaymentQR()">
-                    <option value="1000">Bronze - ₹1000 (75 Coin/day | Rate: 10/cycle)</option>
-                    <option value="2000">Silver - ₹2000 (Cap: 100 Coin/day | Rate: 15/cycle)</option>
-                    <option value="3000">Gold - ₹3000 (Cap: 300/day | Rate: 30/cycle)</option>
-                    <option value="5000">Platinum - ₹5000 (Cap: 400/day | Rate: 50/cycle)</option>
-                    <option value="10000">Diamond - ₹10000 (Cap: 500/day | Rate: 110/cycle)</option>
+                    <option value="1000">Bronze - ₹1000 (50 Coin/day | Rate: 5/cycle)</option>
+                    <option value="2000">Silver - ₹2000 (Cap: 80 Coin/day | Rate: 8/cycle)</option>
+                    <option value="3000">Gold - ₹3000 (Cap: 130/day | Rate: 13/cycle)</option>
+                    <option value="5000">Platinum - ₹5000 (Cap: 250/day | Rate: 25/cycle)</option>
+                    <option value="10000">Diamond - ₹10000 (Cap: 500/day | Rate: 50/cycle)</option>
                 </select>
             </div>
 
@@ -476,81 +482,104 @@
         };
         window.closeUpgradeModal = () => { document.getElementById('upgrade-plan-modal').style.display = 'none'; };
 
-        window.chartLocalDataPoints = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+window.buildFreshLiveChart = (points = [], labels = []) => {
+    if (window.liveChart) window.liveChart.destroy();
 
-        window.buildFreshLiveChart = (freshPointsArray) => {
-            if (window.liveChart) { window.liveChart.destroy(); }
-            if(freshPointsArray && freshPointsArray.length === 10) { window.chartLocalDataPoints = freshPointsArray; }
+    const ctx = document.getElementById('rateChartLive').getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 250);
+    grad.addColorStop(0, 'rgba(255, 140, 0, 0.3)');
+    grad.addColorStop(1, 'rgba(255, 140, 0, 0)');
 
-            const ctx = document.getElementById('rateChartLive').getContext('2d');
-            const grad = ctx.createLinearGradient(0, 0, 0, 130);
-            grad.addColorStop(0, 'rgba(255, 140, 0, 0.35)');
-            grad.addColorStop(1, 'rgba(255, 140, 0, 0)');
-
-            window.liveChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-                    datasets: [{
-                        data: window.chartLocalDataPoints.map(v => Number(v)),
-                        borderColor: '#ff8c00',
-                        borderWidth: 3,
-                        fill: true,
-                        backgroundColor: grad,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#ffaa33',
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: { 
-                    maintainAspectRatio: false, 
-                    responsive: true,
-                    animation: { duration: 400 },
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        x: { display: false }, 
-                        y: { 
-                            grid: { color: 'rgba(255,255,255,0.03)' },
-                            ticks: { 
-                                color: '#94a3b8', 
-                                font: { size: 10, weight: '600' },
-                                callback: function(value) { return '₹' + Number(value).toFixed(2); }
-                            },
-                            beginAtZero: false,
-                            grace: '20%'
-                        } 
+    window.liveChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels.map(l => (l && l.length > 5) ? l.substring(0, 5) : l),
+            datasets: [{
+                data: points.map(v => Number(v)),
+                borderColor: '#ff8c00',
+                borderWidth: 3,
+                fill: true,
+                backgroundColor: grad,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHitRadius: 10
+            }]
+        },
+        options: { 
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 500 },
+            layout: {
+                padding: { bottom: 25 }
+            },
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { 
+                    display: true, 
+                    grid: { display: false },
+                    ticks: { 
+                        color: '#64748b', 
+                        font: { size: 9 },
+                        maxRotation: 0,
+                        minRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 5 
                     } 
-                }
-            });
-        };
+                }, 
+                y: { 
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { size: 10, weight: '600' },
+                        callback: (value) => '₹' + Number(value).toFixed(2)
+                    },
+                    beginAtZero: false,
+                    grace: '10%'
+                } 
+            } 
+        }
+    });
+};
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            const uid = localStorage.getItem('user_id');
-            const uphone = localStorage.getItem('user_phone') || 'Not Set'; 
-            
-            if(!uid) {
-                window.location.href = 'index.html';
-                return;
-            }
+window.addEventListener('DOMContentLoaded', async () => {
+    const uid = localStorage.getItem('user_id');
+    const uphone = localStorage.getItem('user_phone') || 'Not Set'; 
+    
+    if(!uid) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-            const phoneProfileText = document.getElementById('profile-display-phone');
-            if(phoneProfileText) {
-                phoneProfileText.innerText = uphone;
-            }
+    const phoneProfileText = document.getElementById('profile-display-phone');
+    if(phoneProfileText) {
+        phoneProfileText.innerText = uphone;
+    }
 
-            window.buildFreshLiveChart();
-            try {
-                await window.loadDashboardData();
-                await window.checkActiveMining();
-                if(typeof window.startChartLoop === 'function') { window.startChartLoop(); }
-            } catch (err) { console.error("Initialization pipeline hitch:", err); }
-            
-            if(localStorage.getItem('is_admin') === 'true'){
-                const adminBtn = document.getElementById('admin-panel-link');
-                if(adminBtn) adminBtn.style.display = 'block';
-            }
-        });
+    // Chart init pehle
+    window.buildFreshLiveChart();
+
+    try {
+        // Data fetch karo
+        await window.loadDashboardData();
+        
+        // High/Low aur Chart data ko force load karo taaki 0.00 na dikhe
+        await window.changeTimeframe('1M'); 
+        
+        await window.checkActiveMining();
+        
+        if(typeof window.startChartLoop === 'function') { 
+            window.startChartLoop(); 
+        }
+    } catch (err) { 
+        console.error("Initialization pipeline hitch:", err); 
+    }
+    
+    if(localStorage.getItem('is_admin') === 'true'){
+        const adminBtn = document.getElementById('admin-panel-link');
+        if(adminBtn) adminBtn.style.display = 'block';
+    }
+});
+
     </script>
 </body>
 </html>
