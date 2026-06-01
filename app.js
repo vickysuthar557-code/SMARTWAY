@@ -14,13 +14,13 @@ if (typeof supabase !== 'undefined') {
 
 // STRICT MATCHING: FIXED PACKAGE CONFIGURATIONS FROM YOUR ORIGINAL LOGIC
 const miningConfigs = {
-    '100':                 { cycle: 2,   cap: 10,   name: 'Trial' },
-    'Trial Package — ₹100': { cycle: 2,   cap: 10,   name: 'Trial' }, 
-    '1000':                { cycle: 10,  cap: 100,  name: 'Bronze' },
-    '2000':                { cycle: 15,  cap: 75,   name: 'Silver' }, 
-    '3000':                { cycle: 30,  cap: 300,  name: 'Gold' },
-    '5000':                { cycle: 50,  cap: 400,  name: 'Platinum' },
-    '10000':               { cycle: 110, cap: 500,  name: 'Diamond' }
+    '100':                 { cycle: 1,   cap: 10,   name: 'Trial' },
+    'Trial Package — ₹100': { cycle: 1,   cap: 10,   name: 'Trial' }, 
+    '1000':                { cycle: 5,  cap: 50,  name: 'Bronze' },
+    '2000':                { cycle: 8,  cap: 80,   name: 'Silver' }, 
+    '3000':                { cycle: 13,  cap: 130,  name: 'Gold' },
+    '5000':                { cycle: 25,  cap: 250,  name: 'Platinum' },
+    '10000':               { cycle: 50, cap: 500,  name: 'Diamond' }
 };
 
 // ==========================================
@@ -325,49 +325,62 @@ window.startChartLoop = async () => {
     }, updateSpeed);
 };
 
+// CHART HISTORY LOAD & ALIGNMENT
 window.changeTimeframe = async (timeframe, element) => {
     window.currentChartTimeframe = timeframe;
     
-    document.querySelectorAll('.tf-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.color = '#64748b';
-    });
-    if(element) {
-        element.classList.add('active');
-        element.style.color = 'white';
+    // UI Update
+    document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
+    if(element) element.classList.add('active');
+
+    // Supabase se historical data fetch karein
+    const { data: history, error } = await sb
+        .from('rate_history')
+        .select('rate, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (!error && history) {
+        const points = history.map(h => parseFloat(h.rate)).reverse();
+        const labels = history.map(h => new Date(h.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })).reverse();
+        
+        // High/Low Calculate karein
+        const rates = history.map(h => parseFloat(h.rate));
+        document.getElementById('today-high').innerText = `₹${Math.max(...rates).toFixed(2)}`;
+        document.getElementById('today-low').innerText = `₹${Math.min(...rates).toFixed(2)}`;
+
+        window.buildFreshLiveChart(points, labels);
     }
-
-    let limitCount = 10; 
-    if(timeframe === '5M') limitCount = 30; 
-    if(timeframe === '1H') limitCount = 60; 
-
-    try {
-        const { data: historyData, error } = await sb
-            .from('rate_history')
-            .select('rate, created_at') 
-            .order('id', { ascending: false })
-            .limit(limitCount);
-
-        if (!error && historyData && historyData.length > 0 && window.liveChart) {
-            let points = historyData.map(h => parseFloat(h.rate)).reverse();
-            
-            let labels = historyData.map(h => {
-                if(h.created_at) {
-                    return new Date(h.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                }
-                return '';
-            }).reverse();
-
-            window.liveChart.data.datasets[0].data = points;
-            window.liveChart.data.labels = labels;
-            window.liveChart.update();
-        }
-    } catch(e) { 
-        console.error("Timeframe history load fail:", e); 
-    }
-
-    window.startChartLoop();
 };
+
+// REALTIME LOOP WITH FLUCTUATION
+window.startChartLoop = async () => {
+    if(window.chartIntervalEngine) clearInterval(window.chartIntervalEngine);
+
+    window.chartIntervalEngine = setInterval(async () => {
+        const { data: settings } = await sb.from('app_settings').select('coin_rate').single();
+        if(!settings) return;
+
+        const base = parseFloat(settings.coin_rate);
+        const fluctuation = (Math.random() * 0.4) - 0.2; // Admin rate ke around fluctuation
+        const liveRate = parseFloat((base + fluctuation).toFixed(2));
+
+        document.getElementById('current-coin-rate-text').innerText = `₹${liveRate.toFixed(2)}`;
+
+        if (window.liveChart) {
+            window.liveChart.data.datasets[0].data.push(liveRate);
+            window.liveChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+            
+            // Graph ko slide karne ke liye purana data shift karein
+            if (window.liveChart.data.datasets[0].data.length > 20) {
+                window.liveChart.data.datasets[0].data.shift();
+                window.liveChart.data.labels.shift();
+            }
+            window.liveChart.update('none'); // smooth animation ke liye
+        }
+    }, 3000);
+};
+
 
 // ==========================================
 // PACKAGE UPGRADE CHANNELS
