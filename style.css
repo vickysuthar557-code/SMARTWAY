@@ -337,7 +337,7 @@ chart-wrapper {
 
 #rateChartLive{
     width:100% !important;
-    height:320px !important;
+    height:300px !important;
 }
 .market-stats{
     display:flex;
@@ -365,13 +365,12 @@ chart-wrapper {
     font-weight:700;
 }
 /* Primary Execution Actions Buttons Controls Structure Rows */
-.action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-top: 20px; /* Chart se thoda dur */
-    padding-bottom: 20px;
+.action-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
 }
+
 .btn-action {
     padding: 16px;
     border-radius: 20px;
@@ -387,16 +386,26 @@ chart-wrapper {
     transition: 0.2s ease;
     width: 100%;
 }
+
 .btn-convert {
-    background: rgba(30, 41, 59, 0.8);
+    background: rgb(255,22,22);
     border: 1px solid rgba(255,255,255,0.05);
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
+
+
 .btn-withdraw {
-    background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+    background: linear-gradient(135deg, #22c 0%, #3c6be6 100%);
     box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
 }
-.btn-action:active { transform: scale(0.96); }
+.withdraw-center{
+    grid-column: 1 / span 2;
+    max-width: 280px;
+    margin: 0 auto;
+}
+.btn-action:active {
+    transform: scale(0.96);
+}
 
 /* Overlays Popups System Core Base Layout Style Elements */
 .modal-overlay {
@@ -437,6 +446,14 @@ chart-wrapper {
 }
 
 /* Polished Dark Themed Styled Custom Input Nodes */
+.input-wrapper-theme input {
+    position: relative;
+    z-index: 1;
+}
+
+.input-wrapper-theme {
+    overflow: hidden;
+}
 .input-wrapper-theme {
     position: relative;
     margin-bottom: 16px;
@@ -615,4 +632,390 @@ chart-wrapper {
 .rate-value{
     text-shadow: 0 0 18px rgba(255,140,0,0.35);
     letter-spacing: 1px;
+}
+/* --- ADMIN PANEL ENHANCED CSS --- */
+
+/* Refresh Button Styles */
+.refresh-btn {
+    background: #64748b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.refresh-btn:hover {
+    background: #475569;
+    transform: translateY(-2px);
+}
+
+/* Table Enhancements */
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.data-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 700;
+    padding: 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table td {
+    padding: 16px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #1e293b;
+}
+
+/* Button Variants */
+.btn-s {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+}
+
+.btn-app {
+    background: #22c55e;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+}
+
+.btn-app:hover { background: #16a34a; }
+
+.btn-rej {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+}
+
+.btn-rej:hover { background: #dc2626; }
+
+/* Settings Input Focus */
+.settings-card input:focus {
+    outline: none;
+    border-color: #ff8c00 !important;
+    box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+}
+
+/* Animations for Tabs */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+  .modal-content input:focus {
+    position: relative;
+    z-index: 10;
+    transform: none !important;
+} 
+.modal-overlay{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    z-index:9999;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-content{
+    z-index:10000;
+    position:relative;
+}
+.btn-buy {
+    background: linear-gradient(135deg,#73b607f3,#95dc23f3);
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 0 20px rgba(56,189,248,.3);
+}
+
+.btn-buy:hover {
+    transform: scale(1.05);
+}
+.global-mining-card {
+    padding: 18px;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(15,23,42,.8), rgba(30,41,59,.6));
+    border: 1px solid rgba(56,189,248,.15);
+
+    /* 👇 GAP FIX */
+    margin-bottom: 18px;
+}
+
+.mining-container {
+    margin-top: 18px;
+}
+
+/* HEADER */
+.gm-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.gm-icon{
+    font-size:20px;
+    filter:drop-shadow(0 0 10px rgba(56,189,248,.5));
+}
+
+.gm-title{
+    font-size:12px;
+    letter-spacing:2px;
+    font-weight:700;
+    color:#94a3b8;
+}
+
+/* VALUE */
+.gm-value{
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    margin:8px 0;
+}
+
+.gm-value span{
+    font-size:28px;
+    font-weight:800;
+    color:#38bdf8;
+    text-shadow:0 0 15px rgba(56,189,248,.3);
+}
+
+.gm-value small{
+    color:#64748b;
+    font-size:12px;
+    margin-bottom:4px;
+}
+
+/* SUBTEXT */
+.gm-subtext{
+    font-size:11px;
+    color:#94a3b8;
+    opacity:0.8;
+}
+
+/* GLOW BAR ANIMATION */
+.gm-glow-bar{
+    position:absolute;
+    bottom:0;
+    left:-50%;
+    width:200%;
+    height:2px;
+    background:linear-gradient(90deg, transparent, #38bdf8, transparent);
+    animation:gmMove 3s linear infinite;
+}
+
+@keyframes gmMove{
+    0%{ transform:translateX(-50%); }
+    100%{ transform:translateX(50%); }
+}
+.sell-modal{
+    max-width:420px;
+    padding:20px;
+    border-radius:18px;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    border:1px solid rgba(56,189,248,.2);
+    color:white;
+}
+
+/* HEADER */
+.sell-header{
+    text-align:center;
+    margin-bottom:15px;
+}
+
+.sell-icon{
+    font-size:28px;
+    margin-bottom:5px;
+    filter:drop-shadow(0 0 10px #22c55e);
+}
+
+.sell-header h3{
+    margin:0;
+    font-size:18px;
+    font-weight:700;
+}
+
+.sell-header p{
+    margin:4px 0 0;
+    font-size:12px;
+    color:#94a3b8;
+}
+
+/* BALANCE */
+.sell-balance-box{
+    background:rgba(255,255,255,.03);
+    padding:12px;
+    border-radius:12px;
+    margin:12px 0;
+    text-align:center;
+}
+
+.sell-balance-box span{
+    font-size:11px;
+    color:#94a3b8;
+}
+
+.sell-balance-value{
+    font-size:22px;
+    font-weight:800;
+    color:#22c55e;
+    margin-top:4px;
+}
+
+/* INPUT */
+.sell-input-box{
+    margin-top:12px;
+}
+
+.sell-input-box label{
+    font-size:12px;
+    color:#94a3b8;
+}
+
+.sell-input-box input{
+    width:100%;
+    margin-top:6px;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.1);
+    background:#0f172a;
+    color:white;
+    outline:none;
+}
+
+/* INFO */
+.sell-info{
+    font-size:11px;
+    color:#94a3b8;
+    margin:10px 0;
+    text-align:center;
+}
+
+/* BUTTONS */
+.sell-btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(90deg,#22c55e,#16a34a);
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 0 15px rgba(34,197,94,.3);
+}
+
+.sell-close{
+    width:100%;
+    margin-top:8px;
+    padding:10px;
+    border:none;
+    border-radius:12px;
+    background:#ef4444;
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+}
+.history-item{
+    background:rgba(15,23,42,.55);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:18px;
+    padding:15px;
+    margin-bottom:12px;
+    backdrop-filter:blur(12px);
+    position:relative;
+    overflow:hidden;
+}
+
+.history-item::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:0;
+    width:4px;
+    height:100%;
+    background:#22c55e;
+}
+
+.history-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.history-amount{
+    color:#fff;
+    font-size:18px;
+    font-weight:800;
+}
+
+.history-bank{
+    color:#94a3b8;
+    font-size:12px;
+    margin-top:5px;
+}
+
+.history-date{
+    color:#64748b;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.history-status{
+    padding:7px 12px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+}
+
+.status-pending{
+    background:rgba(245,158,11,.15);
+    color:#f59e0b;
+}
+
+.status-approved{
+    background:rgba(34,197,94,.15);
+    color:#22c55e;
+}
+
+.status-rejected{
+    background:rgba(239,68,68,.15);
+    color:#ef4444;
+}
+.modal-overlay {
+    z-index: 99999 !important;
+}
+
+.modal-content {
+    z-index: 100000 !important;
 }
