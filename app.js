@@ -168,34 +168,69 @@ window.logout = () => {
 // DYNAMIC 3X LIMIT & DEGRADED CALCULATOR ENGINE (RE-BUILT FOR TRIAL COMMISSION)
 // ==========================================
 async function calculateFinalPower(user) {
-    if (!user) return { finalRate: 10, finalCap: 100 }; 
-    
-    // Rule 1: Agar account degraded hai, toh direct minimal limit return karein
+    if (!user) return { finalRate: 10, finalCap: 100 };
+
+    // ==============================
+    // 1. HARD DEGRADED STATE CHECK
+    // ==============================
     if (user.is_degraded === true) {
-        return { finalRate: 2, finalCap: 10 }; 
+        return { finalRate: 1, finalCap: 10 };
     }
 
-    let baseRate = 10;
-    let baseCap = 100;
+    // ==============================
+    // 2. PACKAGE BASE CONFIG
+    // ==============================
+    let baseRate = 1;
+    let baseCap = 10;
 
-    // Rule 2: Check for Trial Package User
-    if (user.package_id === '100' || user.package_id === 'Trial Package — ₹100' || user.package_id === 100) {
-        console.log("Current user is on Trial Plan. Allowing base limits + referral rewards.");
-        // Trial ki asli base limits setup karein
-        baseRate = 2; 
+    if (
+        user.package_id === '100' ||
+        user.package_id === 100 ||
+        user.package_id === 'Trial Package — ₹100'
+    ) {
+        baseRate = 2;
         baseCap = 10;
     } else {
-        // Real paid packages ke liye config file se base rate aur cap uthein
         const config = miningConfigs[user.package_id] || miningConfigs['100'];
-        baseRate = config.cycle || 10;
-        baseCap = config.cap || 100;
+        baseRate = config.cycle;
+        baseCap = config.cap;
     }
 
-    // Rule 3: FINAL MATHEMATICAL ADDITION (SABHI USERS KE LIYE)
-    // Ab chahe user Trial ho ya Paid, use referral networks se mila hua rate_boost aur cap_boost milega!
+    // ==============================
+    // 3. LIFETIME EARNING 3X CHECK (IMPORTANT FIX)
+    // ==============================
+    const packageAmount =
+        Number(user.package_id) || 100;
+
+    const earned =
+        Number(user.total_earned_till_date || 0);
+
+    const limit = packageAmount * 3;
+
+    console.log("PACKAGE:", packageAmount);
+    console.log("EARNED:", earned);
+    console.log("3X LIMIT:", limit);
+
+    // 🔥 AUTO DEGRADED TRIGGER (THIS WAS MISSING)
+    if (earned >= limit) {
+        console.log("🔥 3X LIMIT HIT → USER DEGRADED");
+
+        await sb.from('users')
+            .update({ is_degraded: true })
+            .eq('id', user.id);
+
+        return {
+            finalRate: 1,
+            finalCap: 10
+        };
+    }
+
+    // ==============================
+    // 4. BOOST SYSTEM
+    // ==============================
     let finalRate = baseRate + (parseFloat(user.rate_boost) || 0);
     let finalCap = baseCap + (parseFloat(user.cap_boost) || 0);
-    
+
     return { finalRate, finalCap };
 }
 // ==========================================
@@ -203,55 +238,279 @@ async function calculateFinalPower(user) {
 // ==========================================
 window.loadDashboardData = async () => {
     const uid = localStorage.getItem('user_id');
-    if(!uid) return;
 
-    const secureSessionActive = await verifyActiveDeviceSession(uid);
-    if(!secureSessionActive) return;
-
-    let { data: user, error } = await sb.from('users').select('*').eq('id', uid).single();
-    
-    if(user) {
-        user = await checkAndResetDailyLimit(user);
-
-        const warningBox = document.getElementById('account-degraded-warning');
-        if (warningBox) {
-            warningBox.style.display = user.is_degraded ? 'block' : 'none';
-        }
-
-        if(document.getElementById('wallet-balance')) document.getElementById('wallet-balance').innerText = `₹${user.wallet_balance.toFixed(2)}`;
-        if(document.getElementById('coin-count')) document.getElementById('coin-count').innerText = user.mining_balance.toFixed(2);
-        
-        const currentPlanText = document.getElementById('current-user-plan');
-        if(currentPlanText) {
-            const currentConf = miningConfigs[user.package_id] || { name: 'Trial' };
-            currentPlanText.innerText = user.is_degraded ? "Trial (Degraded 3X)" : currentConf.name;
-        }
-        
-        const power = await calculateFinalPower(user);
-        const totalCap = parseFloat(power.finalCap) || 100;
-        const totalMined = parseFloat(user.daily_mined_today) || 0;
-        const safeCapLeft = Math.max(0, totalCap - totalMined);
-
-        if(document.getElementById('cap-left')) {
-            document.getElementById('cap-left').innerText = safeCapLeft.toFixed(2);
-            document.getElementById('cap-left').style.color = safeCapLeft <= 0 ? "#ff4444" : "#22c55e";
-        }
-        if(document.getElementById('cap-max')) document.getElementById('cap-max').innerText = totalCap;
-        if(document.getElementById('rate-info')) document.getElementById('rate-info').innerText = `Rate: ${power.finalRate} Coins / Cycle`;
-        
-        // Dynamic Sync Withdrawal Form Text Fields
-        const { data: settings } = await sb.from('app_settings').select('min_withdrawal, max_withdrawal').single();
-        if(settings) {
-            const minW = settings.min_withdrawal || 100;
-            const maxW = settings.max_withdrawal || 10000;
-            const targetField = document.getElementById('withdraw-amount');
-            if(targetField) {
-                targetField.placeholder = `Enter Amount (₹${minW} - ₹${maxW})`;
-            }
-        }
+    if (!uid) {
+        console.log('User ID missing');
+        return;
     }
-};
 
+    // Profile Phone Sync
+    const phoneEl = document.getElementById('profile-display-phone');
+    if (phoneEl) {
+        phoneEl.innerText =
+            localStorage.getItem('user_phone') ||
+            'User';
+    }
+
+    const secureSessionActive =
+        await verifyActiveDeviceSession(uid);
+
+    if (!secureSessionActive) return;
+
+    const {
+        data: user,
+        error
+    } = await sb
+        .from('users')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+    if (error) {
+        console.error(
+            'Dashboard Load Error:',
+            error
+        );
+        return;
+    }
+
+    if (!user) {
+        console.log('User not found');
+        return;
+    }
+
+    let freshUser =
+        await checkAndResetDailyLimit(user);
+
+    console.log(
+        'Dashboard User Loaded:',
+        freshUser
+    );
+
+    // =====================================
+    // Degraded Warning
+    // =====================================
+    const warningBox =
+        document.getElementById(
+            'account-degraded-warning'
+        );
+
+    if (warningBox) {
+        warningBox.style.display =
+            freshUser.is_degraded
+                ? 'block'
+                : 'none';
+    }
+
+    // =====================================
+    // Global Settings
+    // =====================================
+    const {
+        data: settings
+    } = await sb
+        .from('app_settings')
+        .select('*')
+        .single();
+
+    // =====================================
+    // Global Mining Counter
+    // =====================================
+    const globalMiningEl =
+        document.getElementById(
+            'global-mining-count'
+        );
+
+    if (globalMiningEl) {
+        const miningCount =
+            Number(
+                settings?.global_mining || 0
+            );
+
+        globalMiningEl.innerText =
+            miningCount.toLocaleString(
+                'en-IN'
+            );
+    }
+
+    // =====================================
+    // Wallet
+    // =====================================
+    const walletEl =
+        document.getElementById(
+            'wallet-balance'
+        );
+
+    if (walletEl) {
+        walletEl.innerText =
+            `₹${Number(
+                freshUser.wallet_balance || 0
+            ).toFixed(2)}`;
+    }
+
+    // =====================================
+    // Coin Balance
+    // =====================================
+    const coinEl =
+        document.getElementById(
+            'coin-count'
+        );
+
+    if (coinEl) {
+        coinEl.innerText =
+            Number(
+                freshUser.mining_balance || 0
+            ).toFixed(2);
+    }
+
+    // =====================================
+    // Package Name Fix
+    // =====================================
+    const currentPlanText =
+        document.getElementById(
+            'current-user-plan'
+        );
+
+    if (currentPlanText) {
+
+        const currentConf =
+            miningConfigs[
+                freshUser.package_id
+            ];
+
+        let packageName =
+            currentConf?.name ||
+            `₹${freshUser.package_id}`;
+
+        if (
+            freshUser.package_id === 1000
+        ) packageName = 'Bronze';
+
+        if (
+            freshUser.package_id === 2000
+        ) packageName = 'Silver';
+
+        if (
+            freshUser.package_id === 3000
+        ) packageName = 'Gold';
+
+        if (
+            freshUser.package_id === 5000
+        ) packageName = 'Platinum';
+
+        if (
+            freshUser.package_id === 10000
+        ) packageName = 'Diamond';
+
+        currentPlanText.innerText =
+            freshUser.is_degraded
+                ? 'Trial (3X Reached)'
+                : packageName;
+    }
+
+    // =====================================
+    // Mining Power
+    // =====================================
+    const power =
+        await calculateFinalPower(
+            freshUser
+        );
+
+    const totalCap =
+        Number(power.finalCap || 100);
+
+    const totalMined =
+        Number(
+            freshUser.daily_mined_today || 0
+        );
+
+    const capLeft =
+        Math.max(
+            0,
+            totalCap - totalMined
+        );
+
+    const capLeftEl =
+        document.getElementById(
+            'cap-left'
+        );
+
+    if (capLeftEl) {
+        capLeftEl.innerText =
+            capLeft.toFixed(2);
+
+        capLeftEl.style.color =
+            capLeft <= 0
+                ? '#ef4444'
+                : '#22c55e';
+    }
+
+    const capMaxEl =
+        document.getElementById(
+            'cap-max'
+        );
+
+    if (capMaxEl) {
+        capMaxEl.innerText =
+            totalCap.toFixed(0);
+    }
+
+    const rateInfoEl =
+        document.getElementById(
+            'rate-info'
+        );
+
+    if (rateInfoEl) {
+        rateInfoEl.innerText =
+            `Rate: ${power.finalRate} SMC / Cycle`;
+    }
+
+    // =====================================
+    // Withdraw Limits
+    // =====================================
+    const withdrawField =
+        document.getElementById(
+            'withdraw-amount'
+        );
+
+    if (
+        withdrawField &&
+        settings
+    ) {
+        const minW =
+            Number(
+                settings.min_withdrawal ||
+                100
+            );
+
+        const maxW =
+            Number(
+                settings.max_withdrawal ||
+                10000
+            );
+
+        withdrawField.placeholder =
+            `Enter Amount (₹${minW} - ₹${maxW})`;
+    }
+
+    // =====================================
+    // Coin Rate Text
+    // =====================================
+    const rateText =
+        document.getElementById(
+            'current-coin-rate-text'
+        );
+
+    if (rateText) {
+        rateText.innerText =
+            `₹${Number(
+                settings?.coin_rate || 0
+            ).toFixed(2)}`;
+    }
+
+    console.log(
+        'Dashboard Loaded Successfully'
+    );
+};
 // ==========================================
 // ECONOMY & COIN CONVERSION (SECURE RPC BACKEND)
 // ==========================================
@@ -277,512 +536,1586 @@ window.processCustomSell = async () => {
         alert("Transaction Failed: " + error.message);
     }
 };
-
 // ==========================================
-// REALTIME CHART CONTROLLER
+// REALTIME CHART CONTROLLER (2026 PRO)
 // ==========================================
-window.currentChartTimeframe = '1M'; 
+window.currentChartTimeframe = '1M';
 window.chartIntervalEngine = null;
+window.liveChart = null;
 
-window.startChartLoop = async () => {
-    if(window.chartIntervalEngine) clearInterval(window.chartIntervalEngine);
+// ✅ ADD THIS HERE (GLOBAL LOCK FLAG)
+window.isChartRebuilding = false;
+window.changeTimeframe = async (tf, btn = null) => {
 
-    const rateDisplay = document.getElementById('current-coin-rate-text');
-    if(!rateDisplay) return;
+    window.currentChartTimeframe = tf;
 
-    let updateSpeed = 3000; 
-    if(window.currentChartTimeframe === '5M') updateSpeed = 15000; 
-    if(window.currentChartTimeframe === '1H') updateSpeed = 60000; 
+    document
+        .querySelectorAll('.tf-btn')
+        .forEach(b => b.classList.remove('active'));
 
-    window.chartIntervalEngine = setInterval(async () => {
-        const { data: settings } = await sb.from('app_settings').select('coin_rate').single();
-        if(settings) {
-            const base = parseFloat(settings.coin_rate) || 1.0;
-            
-            const minMove = 0.30;
-            const maxMove = 0.50;
-            const randomGap = minMove + (Math.random() * (maxMove - minMove)); 
-            const direction = Math.random() > 0.5 ? 1 : -1; 
-            
-            const liveRate = parseFloat((base + (direction * randomGap)).toFixed(2));
-            rateDisplay.innerText = `₹${liveRate.toFixed(2)}`;
-            
-            if (window.liveChart) {
-                let currentData = [...window.liveChart.data.datasets[0].data];
-                let currentLabels = [...window.liveChart.data.labels];
-                
-                currentData.shift(); 
-                currentData.push(liveRate); 
-                
-                currentLabels.shift();
-                currentLabels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    if (btn) btn.classList.add('active');
 
-                window.liveChart.data.datasets[0].data = currentData;
-                window.liveChart.data.labels = currentLabels;
-                window.liveChart.update('none'); 
-            }
-        }
-    }, updateSpeed);
-};
+    let limit = 30;
 
-// CHART HISTORY LOAD & ALIGNMENT
-window.changeTimeframe = async (timeframe, element) => {
-    window.currentChartTimeframe = timeframe;
-    
-    // UI Update
-    document.querySelectorAll('.tf-btn').forEach(btn => btn.classList.remove('active'));
-    if(element) element.classList.add('active');
+    if (tf === '5M') limit = 60;
+    if (tf === '1H') limit = 120;
 
-    // Supabase se historical data fetch karein
     const { data: history, error } = await sb
         .from('rate_history')
-        .select('rate, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(limit);
 
-    if (!error && history) {
-        const points = history.map(h => parseFloat(h.rate)).reverse();
-        const labels = history.map(h => new Date(h.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })).reverse();
-        
-        // High/Low Calculate karein
-        const rates = history.map(h => parseFloat(h.rate));
-        document.getElementById('today-high').innerText = `₹${Math.max(...rates).toFixed(2)}`;
-        document.getElementById('today-low').innerText = `₹${Math.min(...rates).toFixed(2)}`;
-
-        window.buildFreshLiveChart(points, labels);
+    if (error) {
+        console.error(error);
+        return;
     }
-};
 
-// REALTIME LOOP WITH FLUCTUATION
+    let points = [];
+    let labels = [];
+
+    if (!history || history.length === 0) {
+
+        const { data: settings } = await sb
+            .from('app_settings')
+            .select('coin_rate')
+            .single();
+
+        const base = Number(settings?.coin_rate || 1);
+
+        for (let i = 0; i < 30; i++) {
+            points.push(
+                Number((base + ((Math.random() - 0.5) * 0.4)).toFixed(2))
+            );
+            labels.push(`${i + 1}`);
+        }
+
+    } else {
+
+        const chartData = [...history].reverse();
+
+        points = chartData.map(x => Number(x.rate || 0));
+
+        labels = chartData.map(x => {
+            const d = new Date(x.created_at);
+            return d.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        });
+    }
+
+    // ✅ SAFE BUILD (NO CRASH / NO DOUBLE CALL)
+    window.buildFreshLiveChart(points, labels);
+
+    const high = Math.max(...points);
+    const low = Math.min(...points);
+    const current = points[points.length - 1] || 0;
+
+    const highEl = document.getElementById('today-high');
+    const lowEl = document.getElementById('today-low');
+    const currentEl = document.getElementById('current-coin-rate-text');
+
+    if (highEl) highEl.innerText = `₹${high.toFixed(2)}`;
+    if (lowEl) lowEl.innerText = `₹${low.toFixed(2)}`;
+    if (currentEl) currentEl.innerText = `₹${current.toFixed(2)}`;
+};
+// ==========================================
+// LIVE LOOP
+// ==========================================
 window.startChartLoop = async () => {
-    if(window.chartIntervalEngine) clearInterval(window.chartIntervalEngine);
+
+    if (window.chartIntervalEngine)
+        clearInterval(window.chartIntervalEngine);
+
+    let speed = 3000;
+
+    if (window.currentChartTimeframe === '5M') {
+        speed = 15000;
+    }
 
     window.chartIntervalEngine = setInterval(async () => {
-        const { data: settings } = await sb.from('app_settings').select('coin_rate').single();
-        if(!settings) return;
 
-        const base = parseFloat(settings.coin_rate);
-        const fluctuation = (Math.random() * 0.4) - 0.2; // Admin rate ke around fluctuation
-        const liveRate = parseFloat((base + fluctuation).toFixed(2));
+        const { data: settings } = await sb
+            .from('app_settings')
+            .select('coin_rate')
+            .single();
 
-        document.getElementById('current-coin-rate-text').innerText = `₹${liveRate.toFixed(2)}`;
+        if (!settings) return;
 
+        const base = Number(settings.coin_rate || 1);
+        const move = (Math.random() * 0.4) - 0.2;
+
+        const liveRate = Number((base + move).toFixed(2));
+
+        const rateEl = document.getElementById('current-coin-rate-text');
+        if (rateEl) rateEl.innerText = `₹${liveRate}`;
+
+        // SAFE UPDATE (no chart crash)
         if (window.liveChart) {
-            window.liveChart.data.datasets[0].data.push(liveRate);
-            window.liveChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-            
-            // Graph ko slide karne ke liye purana data shift karein
-            if (window.liveChart.data.datasets[0].data.length > 20) {
-                window.liveChart.data.datasets[0].data.shift();
-                window.liveChart.data.labels.shift();
+
+            const data = window.liveChart.data.datasets[0].data;
+            const labels = window.liveChart.data.labels;
+
+            data.push(liveRate);
+
+            labels.push(
+                new Date().toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                })
+            );
+
+            if (data.length > 120) {
+                data.shift();
+                labels.shift();
             }
-            window.liveChart.update('none'); // smooth animation ke liye
+
+            window.liveChart.update('none');
+
+            const high = Math.max(...data);
+            const low = Math.min(...data);
+
+            const highEl = document.getElementById('today-high');
+            const lowEl = document.getElementById('today-low');
+
+            if (highEl) highEl.innerText = `₹${high.toFixed(2)}`;
+            if (lowEl) lowEl.innerText = `₹${low.toFixed(2)}`;
         }
-    }, 3000);
+
+    }, speed);
 };
-
-
 // ==========================================
 // PACKAGE UPGRADE CHANNELS
 // ==========================================
+
 window.updateUpgradePaymentQR = async () => {
-    const upiDisplay = document.getElementById('upgrade-live-upi');
-    const displayAmtEl = document.getElementById('upgrade-display-amt');
-    const pkgSelect = document.getElementById('modal-package-select');
-    const qrImg = document.getElementById('upgrade-admin-qr');
+    try {
 
-    if(!pkgSelect || !displayAmtEl) return;
-    displayAmtEl.innerText = pkgSelect.value;
+        const upiDisplay = document.getElementById('upgrade-live-upi');
+        const displayAmtEl = document.getElementById('upgrade-display-amt');
+        const pkgSelect = document.getElementById('modal-package-select');
+        const qrImg = document.getElementById('upgrade-admin-qr');
 
-    let adminUPI = "ssm@ybl"; 
-    const { data } = await sb.from('app_settings').select('admin_upi').single();
-    if(data && data.admin_upi) adminUPI = data.admin_upi;
+        if (!pkgSelect || !displayAmtEl) return;
 
-    if(upiDisplay) upiDisplay.innerText = `UPI: ${adminUPI}`;
-    if(qrImg) {
-        const qrData = `upi://pay?pa=${adminUPI}&am=${pkgSelect.value}&cu=INR&tn=UpgradePlan${pkgSelect.value}`;
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
+        displayAmtEl.innerText = pkgSelect.value;
+
+        let adminUPI = "ssm@ybl";
+
+        const { data } = await sb
+            .from('app_settings')
+            .select('admin_upi')
+            .single();
+
+        if (data?.admin_upi) {
+            adminUPI = data.admin_upi;
+        }
+
+        if (upiDisplay) {
+            upiDisplay.innerText = `UPI: ${adminUPI}`;
+        }
+
+        if (qrImg) {
+
+            const qrData =
+                `upi://pay?pa=${adminUPI}&pn=Smartway&am=${pkgSelect.value}&cu=INR`;
+
+            qrImg.src =
+                `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`;
+        }
+
+    } catch (err) {
+        console.error(err);
     }
 };
 
 window.submitUpgradeRequest = async () => {
+
     const uid = localStorage.getItem('user_id');
-    const newPkg = document.getElementById('modal-package-select').value;
-    const utr = document.getElementById('upgrade-utr-input').value;
 
-    if(!utr || utr.trim().length < 6) return alert("Please enter a valid transaction UTR reference ID.");
-
-    const { data: user } = await sb.from('users').select('package_id').eq('id', uid).single();
-
-    const { error } = await sb.from('upgrade_requests').insert([{
-        user_id: uid,
-        old_package: user.package_id,
-        new_package: newPkg,
-        utr_number: utr,
-        status: 'pending'
-    }]);
-
-    if(!error) {
-        alert("Upgrade request submitted successfully! Admin will verify it within 60 minutes.");
-        document.getElementById('upgrade-plan-modal').style.display = 'none';
-    } else {
-        alert("Failed to submit request: " + error.message);
-    }
-};
-
-// ==========================================
-// ADMIN EXTENSION MODULES
-// ==========================================
-window.loadAdminUpgradeRequests = async () => {
-    const list = document.getElementById('upgrade-request-list');
-    if(!list) return;
-
-    const { data, error } = await sb.from('upgrade_requests').select('*, users(full_name, phone_number)').eq('status', 'pending');
-    
-    if(data && data.length > 0) {
-        list.innerHTML = data.map(u => `
-            <tr>
-                <td><b>${u.users?.full_name || 'N/A'}</b><br><small>${u.users?.phone_number || 'N/A'}</small></td>
-                <td>₹${u.old_package} -> <b style="color:#22c55e">₹${u.new_package}</b></td>
-                <td style="color:#ff8c00; font-weight:bold;">${u.utr_number}</td>
-                <td>
-                    <button class="btn-s btn-app" onclick="window.approveUpgrade('${u.id}', '${u.user_id}', '${u.new_package}')">APPROVE</button>
-                    <button class="btn-s btn-rej" onclick="window.rejectUpgrade('${u.id}')">REJECT</button>
-                </td>
-            </tr>
-        `).join('');
-    } else {
-        list.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending upgrade files.</td></tr>';
-    }
-};
-
-window.approveUpgrade = async (requestId, userId, newPackage) => {
-    if(!confirm("Approve this profile plan tier upgrade?")) return;
-    
-    const { error: err1 } = await sb.from('upgrade_requests').update({ status: 'approved' }).eq('id', requestId);
-    
-    const { error: err2 } = await sb.from('users').update({
-        package_id: newPackage,
-        is_approved: true,
-        is_degraded: false,               
-        total_earned_till_date: 0          
-    }).eq('id', userId);
-
-    if(!err1 && !err2) {
-        alert("Upgrade successful! User profile tier limits unlocked.");
-        window.loadAdminUpgradeRequests();
-    } else {
-        alert("Processing mismatch error intercepted.");
-    }
-};
-
-window.rejectUpgrade = async (requestId) => {
-    if(!confirm("Reject this upgrade receipt?")) return;
-    const { error } = await sb.from('upgrade_requests').update({ status: 'rejected' }).eq('id', requestId);
-    if(!error) { alert("Rejected!"); window.loadAdminUpgradeRequests(); }
-};
-
-window.updateGlobalRate = async () => {
-    const rate = parseFloat(document.getElementById('new-coin-rate').value);
-    if(isNaN(rate)) { alert("Please enter a valid rate."); return; }
-    
-    const { data: settings } = await sb.from('app_settings').select('*').single();
-    
-    let history = settings.rate_history || [];
-    history.push({ time: new Date().toLocaleTimeString(), rate: rate });
-    if(history.length > 15) history.shift();
-
-    await sb.from('app_settings').update({ coin_rate: rate, rate_history: history }).eq('id', settings.id);
-
-    const { error } = await sb.from('rate_history').insert([{ rate: rate }]);
-
-    if(!error) alert("Global Rate Updated & Synced to Live Graphs!");
-    else alert("Error updating rate: " + error.message);
-};
-
-const originalShowTab = window.showTab;
-window.showTab = function(tabId, el) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
-    
-    const targetTab = document.getElementById('tab-' + tabId);
-    if(targetTab) targetTab.classList.remove('hidden');
-    if(el) el.classList.add('active');
-    
-    if(tabId === 'approvals') window.loadAdminApprovals();
-    if(tabId === 'withdrawals') window.loadAdminWithdrawals();
-    if(tabId === 'settings') window.loadAdminSettings();
-    if(tabId === 'upgrades') window.loadAdminUpgradeRequests(); 
-};
-
-
-// ==========================================
-// MINING ENGINE CONTROL (SECURE BACKEND RUNTIME)
-// ==========================================
-window.startMiningCycle = async () => {
-    const uid = localStorage.getItem('user_id');
-    if(!uid) return alert("Session expired. Please login again.");
-
-    const secureSessionActive = await verifyActiveDeviceSession(uid);
-    if(!secureSessionActive) return;
-
-    const { data: active } = await sb.from('mining_sessions').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle();
-    if(active) return alert("Your mining cycle is already active!");
-
-    let { data: user } = await sb.from('users').select('*').eq('id', uid).single();
-    user = await checkAndResetDailyLimit(user);
-    
-    const power = await calculateFinalPower(user);
-    const currentMined = user.daily_mined_today ? parseFloat(user.daily_mined_today) : 0;
-    const maxAllowedCap = power.finalCap ? parseFloat(power.finalCap) : 100;
-
-    if(maxAllowedCap > 0 && currentMined >= maxAllowedCap) {
-        return alert("You have reached your daily mining limit for today!");
-    }
-
-    const fixedRate = parseFloat(power.finalRate) || 10;
-    const endTime = new Date(Date.now() + 30 * 60000); 
-    
-    const { error } = await sb.from('mining_sessions').insert([{
-        user_id: uid, 
-        end_time: endTime.toISOString(), 
-        potential_coins: fixedRate, 
-        is_active: true
-    }]);
-
-    if(!error) {
-        alert("Mining Started! 🚀");
-        location.reload();
-    } else {
-        alert(error.message);
-    }
-};
-
-window.checkActiveMining = async () => {
-    const uid = localStorage.getItem('user_id');
-    if(!uid) return; 
-    
-    const { data: session } = await sb.from('mining_sessions').select('*').eq('user_id', uid).eq('is_active', true).maybeSingle();
-
-    if(session) {
-        const timerBox = document.getElementById('cycle-timer-box');
-        const timerText = document.getElementById('timer-text');
-        if(timerBox) timerBox.style.display = 'block';
-
-        if(window.miningInterval) clearInterval(window.miningInterval);
-
-        window.miningInterval = setInterval(async () => {
-            const now = new Date().getTime();
-            const end = new Date(session.end_time).getTime();
-            const diff = end - now;
-
-            if(diff <= 0) {
-                clearInterval(window.miningInterval);
-                window.miningInterval = null; 
-                if(timerText) timerText.innerText = "00:00";
-                await window.claimMiningReward(session);
-            } else {
-                const mins = Math.floor(diff / 60000);
-                const secs = Math.floor((diff % 60000) / 1000);
-                if(timerText) timerText.innerText = `${mins}:${secs < 10 ? '0'+secs : secs}`;
-            }
-        }, 1000);
-    }
-};
-
-window.claimMiningReward = async (session) => {
-    const uid = localStorage.getItem('user_id');
-    if(!uid || session.user_id !== uid) return; 
-
-    if(window.isClaimingInProgress === true) return;
-    window.isClaimingInProgress = true;
-
-    const secureSessionActive = await verifyActiveDeviceSession(uid);
-    if(!secureSessionActive) {
-        window.isClaimingInProgress = false;
+    if (!uid) {
+        alert('Login expired.');
         return;
     }
 
-    try {
-        const { error: rpcSecureErr } = await sb.rpc('secure_claim_mining_reward', {
-            p_session_id: session.id,
-            p_user_id: uid
-        });
+    const newPkg =
+        document.getElementById('modal-package-select')?.value;
 
-        if (rpcSecureErr) {
-            alert("Mining Verification Failed: " + rpcSecureErr.message);
-            window.isClaimingInProgress = false;
-            location.reload();
-            return;
-        }
-        
-        const potentialCoins = parseFloat(session.potential_coins) || 10;
+    const utr =
+        document.getElementById('upgrade-utr-input')?.value?.trim();
 
-        const { error: rpcErr } = await sb.rpc('distribute_passive_income', { 
-            p_claimant_id: session.user_id, 
-            p_amount_mined: potentialCoins 
-        });
-
-        if (rpcErr) console.error("Passive Income Network Error:", rpcErr.message);
-
-        alert(`Success! ${potentialCoins} Coins claimed successfully.`);
-        window.isClaimingInProgress = false;
-        location.reload();
-    } catch (e) {
-        console.error("Error in claim mining reward:", e);
-        window.isClaimingInProgress = false;
-        location.reload();
+    if (!utr || utr.length < 6) {
+        return alert('Enter valid UTR number');
     }
-};
-
-// ==========================================
-// FUND WITHDRAWAL TRACKER WITH DYNAMIC RANGE
-// ==========================================
-window.submitWithdrawal = async () => {
-    const uid = localStorage.getItem('user_id');
-    const amt = parseFloat(document.getElementById('withdraw-amount')?.value);
-    const holder = document.getElementById('bank-holder')?.value;
-    const acc = document.getElementById('bank-account')?.value;
-    const ifsc = document.getElementById('bank-ifsc')?.value;
-
-    if(!amt || !holder || !acc || !ifsc) return alert("Please fill in complete bank details.");
-    
-    // Fetch Dynamic Admin Range Controls 
-    const { data: settings } = await sb.from('app_settings').select('min_withdrawal, max_withdrawal').single();
-    const minAllowed = settings ? parseInt(settings.min_withdrawal) : 100;
-    const maxAllowed = (settings && settings.max_withdrawal) ? parseInt(settings.max_withdrawal) : 10000;
-    
-    if(amt < minAllowed) return alert(`Minimum withdrawal requirement is ₹${minAllowed}.`);
-    if(amt > maxAllowed) return alert(`Maximum withdrawal limit per request is ₹${maxAllowed}.`);
-    
-    const { data: user } = await sb.from('users').select('wallet_balance').eq('id', uid).single();
-    if(user.wallet_balance < amt) return alert("Insufficient wallet balance for this withdrawal request.");
-
-    // FIXED: Strict JSON Object mapping for Supabase JSON/Object field
-    const bankObj = { "holder": holder, "acc": acc, "ifsc": ifsc };
-    
-    const { error } = await sb.from('withdrawals').insert([{
-        user_id: uid, 
-        amount: amt, 
-        bank_details: bankObj, 
-        status: 'pending'
-    }]);
-
-    if(!error) {
-        await sb.from('users').update({ wallet_balance: user.wallet_balance - amt }).eq('id', uid);
-        alert("Withdrawal Request successful!");
-        location.reload();
-    } else {
-        alert("Error: " + error.message);
-    }
-};
-
-window.loadHistory = async () => {
-    const uid = localStorage.getItem('user_id');
-    const container = document.getElementById('history-list');
-    if(!container) return;
-
-    const { data } = await sb.from('withdrawals').select('*').eq('user_id', uid).order('created_at', { ascending: false });
-    if(data && data.length > 0) {
-        container.innerHTML = data.map(w => {
-            let bankAccount = 'N/A';
-            
-            // FIXED: Safe Parsing for Stringified JSON or direct Object
-            if (w.bank_details) {
-                try {
-                    let details = typeof w.bank_details === 'string' ? JSON.parse(w.bank_details) : w.bank_details;
-                    const rawAcc = details.acc || details.account || '';
-                    if(rawAcc) bankAccount = `****${String(rawAcc).slice(-4)}`;
-                } catch(e) {
-                    console.error("Error parsing bank details:", e);
-                }
-            }
-            
-            let formattedDate = 'Recent';
-            if(w.created_at) {
-                const d = new Date(w.created_at);
-                formattedDate = d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            }
-            
-            return `
-                <div class="history-item" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="hist-info">
-                        <div style="font-weight: 700; color: #f8fafc; font-size: 14px;">₹${parseFloat(w.amount).toFixed(2)}</div>
-                        <small style="color: #64748b; font-size: 11px; display: block; margin-top: 2px;">Acc: ${bankAccount}</small>
-                        <small style="color: #94a3b8; font-size: 10px; display: block; margin-top: 1px;"><i class="far fa-clock"></i> ${formattedDate}</small>
-                    </div>
-                    <span class="status-pill status-${w.status}" style="text-transform: uppercase; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px;">${w.status}</span>
-                </div>
-            `;
-        }).join('');
-    } else {
-        container.innerHTML = `<div class="empty-state" style="text-align: center; padding: 15px; color: #64748b;"><p>No transactions found.</p></div>`;
-    }
-};
-
-// ==========================================
-// 10-LEVEL DOWNLINE SYSTEM MATRIX
-// ==========================================
-window.loadMultiLevelTeam = async () => {
-    const teamListEl = document.getElementById('team-list');
-    const totalCountEl = document.getElementById('total-members-count');
-    if (!teamListEl) return;
-
-    const userPhone = localStorage.getItem('user_phone'); 
-    if (!userPhone) return;
 
     try {
-        const { data: allUsers, error } = await sb.from('users').select('full_name, phone_number, referrer_id');
+
+        const { data: user } = await sb
+            .from('users')
+            .select('package_id')
+            .eq('id', uid)
+            .single();
+
+        const { error } = await sb
+            .from('upgrade_requests')
+            .insert([{
+                user_id: uid,
+                old_package: user.package_id,
+                new_package: newPkg,
+                utr_number: utr,
+                status: 'pending'
+            }]);
+
         if (error) throw error;
 
-        let fullDownline = [];
-        let currentLevelParents = [userPhone]; 
+        alert('Upgrade request submitted successfully');
 
-        for (let level = 1; level <= 10; level++) {
-            if (currentLevelParents.length === 0) break;
-            const levelMembers = allUsers.filter(u => currentLevelParents.includes(u.referrer_id));
-            if (levelMembers.length === 0) break;
+        document.getElementById(
+            'upgrade-plan-modal'
+        ).style.display = 'none';
 
-            levelMembers.forEach(member => {
-                fullDownline.push({
-                    name: member.full_name || "Unknown User",
-                    phone: member.phone_number,
-                    level: level
-                });
-            });
-            currentLevelParents = levelMembers.map(m => m.phone_number);
-        }
+    } catch (err) {
+        alert(err.message);
+    }
+};
+// ==========================================
+// BUY COIN SYSTEM (FIXED + LIVE RATE SUPPORT)
+// ==========================================
 
-        if (fullDownline.length === 0) {
-            teamListEl.innerHTML = '<p style="text-align:center; color:#64748b;">No members yet.</p>';
-            totalCountEl.innerText = "0";
+window.buyRate = 1;
+window.buyRateHistory = []; // optional for fluctuation feel
+
+window.openBuyCoinModal = async () => {
+
+    try {
+
+        const modal = document.getElementById('buy-coin-modal');
+        if (!modal) {
+            console.error("BUY MODAL NOT FOUND");
+            alert('Buy Coin Modal Not Found');
             return;
         }
 
-        totalCountEl.innerText = fullDownline.length;
-        teamListEl.innerHTML = ""; 
+        modal.style.display = 'flex';
 
-        fullDownline.forEach(member => {
-            const hiddenPhone = member.phone ? member.phone.toString().substring(0, 4) + "****" : "N/A";
-            const badgeClass = member.level <= 5 ? `lvl-${member.level}` : 'lvl-5';
-            const memberCard = `
-                <div class="member-item">
-                    <div>
-                        <div style="font-weight: 800; font-size: 16px; margin-bottom: 3px;">${member.name}</div>
-                        <div style="font-size: 13px; color: #64748b; font-weight: 600;">${hiddenPhone}</div>
-                    </div>
-                    <span class="lvl-badge ${badgeClass}">Level ${member.level}</span>
-                </div>
+        if (!window.sb) {
+            alert("Database connection not ready");
+            return;
+        }
+
+        // ==============================
+        // FETCH SETTINGS
+        // ==============================
+        const { data, error } = await sb
+            .from('app_settings')
+            .select('coin_rate, admin_upi')
+            .single();
+
+        if (error) throw error;
+
+        // ==============================
+        // BASE RATE
+        // ==============================
+        const baseRate = Number(data?.coin_rate || 1);
+
+        // ==============================
+        // SIMULATED FLUCTUATION (LIVE FEEL)
+        // ==============================
+        const fluctuation = (Math.random() * 0.06) - 0.03; 
+        // ±3% change
+
+        window.buyRate = Number((baseRate * (1 + fluctuation)).toFixed(2));
+
+        // optional history store
+        window.buyRateHistory.push(window.buyRate);
+        if (window.buyRateHistory.length > 50) {
+            window.buyRateHistory.shift();
+        }
+
+        // ==============================
+        // DOM ELEMENTS
+        // ==============================
+        const rateEl = document.getElementById('buy-current-rate');
+        const upiEl = document.getElementById('buy-live-upi');
+        const qrEl = document.getElementById('buy-admin-qr');
+
+        // ==============================
+        // UPDATE RATE UI
+        // ==============================
+        if (rateEl) {
+            rateEl.innerText = `₹${window.buyRate}`;
+        }
+
+        // ==============================
+        // UPI DISPLAY
+        // ==============================
+        const upi = data?.admin_upi || 'N/A';
+
+        if (upiEl) {
+            upiEl.innerHTML = `
+                <span style="color:#38bdf8;">UPI:</span> ${upi}
             `;
-            teamListEl.insertAdjacentHTML('beforeend', memberCard);
-        });
-    } catch (err) { console.error(err); }
+        }
+
+        // ==============================
+        // QR GENERATION
+        // ==============================
+        if (qrEl && upi !== 'N/A') {
+
+            const qrData = `upi://pay?pa=${upi}&pn=Smartway&cu=INR`;
+
+            qrEl.src =
+                `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`;
+        }
+
+        // ==============================
+        // AUTO PRICE REFRESH (optional live feel)
+        // ==============================
+        if (!window.buyRateInterval) {
+
+            window.buyRateInterval = setInterval(() => {
+
+                const liveFluctuation = (Math.random() * 0.04) - 0.02;
+                const newRate = Number((window.buyRate * (1 + liveFluctuation)).toFixed(2));
+
+                window.buyRate = newRate;
+
+                if (rateEl) {
+                    rateEl.innerText = `₹${newRate}`;
+                }
+
+            }, 5000); // every 5 sec
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+};
+window.calculateBuyAmount = () => {
+
+    const qty = Number(document.getElementById('buy-qty')?.value || 0);
+
+    const amtEl = document.getElementById('buy-amount');
+
+    if (!amtEl) return;
+
+    amtEl.value = (qty * window.buyRate).toFixed(2);
 };
 
-if (localStorage.getItem('user_id') && window.location.pathname.includes('dashboard.html')) { 
-    window.checkActiveMining(); 
+window.submitBuyCoinRequest = async () => {
+
+    try {
+
+        const uid = localStorage.getItem('user_id');
+
+        if (!uid) {
+            alert('Login expired');
+            return;
+        }
+
+        const qty = Number(document.getElementById('buy-qty')?.value);
+        const amt = Number(document.getElementById('buy-amount')?.value);
+        const utr = document.getElementById('buy-utr')?.value?.trim();
+
+        if (!qty || qty <= 0) {
+            return alert('Enter valid quantity');
+        }
+
+        if (!utr || utr.length < 6) {
+            return alert('Enter valid UTR');
+        }
+
+        const { error } = await sb
+            .from('buy_coin_requests')
+            .insert([{
+                user_id: uid,
+                qty,
+                amount: amt,
+                utr_number: utr,
+                status: 'pending'
+            }]);
+
+        if (error) {
+            console.error(error);
+            throw error;
+        }
+
+        alert('Buy Coin Request Submitted');
+
+        document.getElementById('buy-coin-modal').style.display = 'none';
+
+        // reset fields
+        document.getElementById('buy-qty').value = '';
+        document.getElementById('buy-amount').value = '';
+        document.getElementById('buy-utr').value = '';
+
+    } catch (err) {
+        alert(err.message);
+    }
+};
+// ==========================================
+// ADMIN EXTENSION MODULES
+// ==========================================
+
+window.loadAdminUpgradeRequests = async () => {
+
+    const list =
+        document.getElementById(
+            'upgrade-request-list'
+        );
+
+    if (!list) return;
+
+    try {
+
+        const { data, error } = await sb
+            .from('upgrade_requests')
+            .select(`
+                *,
+                users(
+                    full_name,
+                    phone_number
+                )
+            `)
+            .eq('status', 'pending')
+            .order('id', {
+                ascending: false
+            });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+
+            list.innerHTML =
+                `<tr>
+                    <td colspan="4"
+                    style="text-align:center">
+                    No Pending Upgrade Requests
+                    </td>
+                </tr>`;
+
+            return;
+        }
+
+        list.innerHTML = data.map(u => `
+            <tr>
+                <td>
+                    <b>${u.users?.full_name || 'N/A'}</b>
+                    <br>
+                    <small>${u.users?.phone_number || 'N/A'}</small>
+                </td>
+
+                <td>
+                    ₹${u.old_package}
+                    →
+                    <b style="color:#22c55e">
+                    ₹${u.new_package}
+                    </b>
+                </td>
+
+                <td style="color:#ff8c00;font-weight:700">
+                    ${u.utr_number}
+                </td>
+
+                <td>
+                    <button
+                        class="btn-s btn-app"
+                        onclick="window.approveUpgrade('${u.id}','${u.user_id}','${u.new_package}')">
+                        APPROVE
+                    </button>
+
+                    <button
+                        class="btn-s btn-rej"
+                        onclick="window.rejectUpgrade('${u.id}')">
+                        REJECT
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+
+        console.error(err);
+
+        list.innerHTML =
+            `<tr>
+                <td colspan="4"
+                style="text-align:center;color:red">
+                ${err.message}
+                </td>
+            </tr>`;
+    }
+};
+// ==========================================
+// BUY COIN ADMIN MODULE
+// ==========================================
+
+window.loadBuyCoinRequests = async () => {
+
+    const list =
+        document.getElementById('buy-coin-list');
+
+    if (!list) return;
+
+    list.innerHTML = `
+        <tr>
+            <td colspan="5" style="text-align:center;">
+                Loading Requests...
+            </td>
+        </tr>
+    `;
+
+    try {
+
+        const { data, error } = await sb
+            .from('buy_coin_requests')
+            .select(`
+                *,
+                users(
+                    full_name,
+                    phone_number
+                )
+            `)
+            .eq('status', 'pending')
+            .order('created_at', {
+                ascending: false
+            });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="5"
+                    style="text-align:center;">
+                        No Pending Requests
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        list.innerHTML = data.map(req => `
+            <tr>
+
+                <td>
+                    <b>${req.users?.full_name || 'N/A'}</b>
+                    <br>
+                    <small>${req.users?.phone_number || 'N/A'}</small>
+                </td>
+
+                <td>
+                    ${Number(req.qty || 0).toFixed(2)}
+                    Coins
+                </td>
+
+                <td>
+                    ₹${Number(req.amount || 0).toFixed(2)}
+                </td>
+
+                <td style="
+                    color:#ff8c00;
+                    font-weight:700;
+                    font-family:monospace;
+                ">
+                    ${req.utr_number || 'N/A'}
+                </td>
+
+                <td>
+
+                    <button
+                    class="btn-s btn-app"
+                    onclick="window.approveBuyCoin(
+                        '${req.id}',
+                        '${req.user_id}',
+                        ${req.qty}
+                    )">
+                        APPROVE
+                    </button>
+
+                    <button
+                    class="btn-s btn-rej"
+                    onclick="window.rejectBuyCoin(
+                        '${req.id}'
+                    )">
+                        REJECT
+                    </button>
+
+                </td>
+
+            </tr>
+        `).join('');
+
+    } catch (err) {
+
+        console.error(err);
+
+        list.innerHTML = `
+            <tr>
+                <td colspan="5"
+                style="color:red;text-align:center;">
+                    ${err.message}
+                </td>
+            </tr>
+        `;
+    }
+};
+
+window.rejectBuyCoin = async (requestId) => {
+
+    if (!confirm('Reject this request ?'))
+        return;
+
+    try {
+
+        const { error } = await sb
+            .from('buy_coin_requests')
+            .update({
+                status: 'rejected'
+            })
+            .eq('id', requestId)
+            .eq('status', 'pending');
+
+        if (error) throw error;
+
+        alert('Request Rejected');
+
+        window.loadBuyCoinRequests();
+
+    } catch (err) {
+
+        alert(err.message);
+    }
+};
+
+// ==========================================
+// UPGRADE APPROVAL
+// ==========================================
+
+window.approveUpgrade = async (
+    requestId,
+    userId,
+    newPackage
+) => {
+
+    if (!confirm(
+        'Approve this profile plan upgrade ?'
+    )) return;
+
+    try {
+
+        const { error: err1 } = await sb
+            .from('upgrade_requests')
+            .update({
+                status: 'approved'
+            })
+            .eq('id', requestId)
+            .eq('status', 'pending');
+
+        if (err1) throw err1;
+
+        const { error: err2 } = await sb
+            .from('users')
+            .update({
+
+                package_id: Number(newPackage),
+
+                is_approved: true,
+
+                is_degraded: false,
+
+                total_earned_till_date: 0
+
+            })
+            .eq('id', userId);
+
+        if (err2) throw err2;
+
+        alert(
+            'Upgrade Approved Successfully'
+        );
+
+        window.loadAdminUpgradeRequests();
+
+    } catch (err) {
+
+        alert(err.message);
+    }
+};
+
+// ==========================================
+// BUY COIN APPROVAL
+// ==========================================
+
+window.approveBuyCoin = async (
+    requestId,
+    userId,
+    qty
+) => {
+
+    if (!confirm(
+        `Add ${qty} coins to user wallet ?`
+    )) return;
+
+    try {
+
+        const { data: req } = await sb
+            .from('buy_coin_requests')
+            .select('status')
+            .eq('id', requestId)
+            .single();
+
+        if (!req) {
+            alert('Request Not Found');
+            return;
+        }
+
+        if (req.status !== 'pending') {
+            alert(
+                'Request Already Processed'
+            );
+            return;
+        }
+
+        const { data: user } = await sb
+            .from('users')
+            .select('mining_balance')
+            .eq('id', userId)
+            .single();
+
+        if (!user) {
+            alert('User Not Found');
+            return;
+        }
+
+        const currentCoins =
+            Number(user.mining_balance || 0);
+
+        const { error: userErr } =
+            await sb
+                .from('users')
+                .update({
+
+                    mining_balance:
+                        currentCoins +
+                        Number(qty)
+
+                })
+                .eq('id', userId);
+
+        if (userErr) throw userErr;
+
+        const { error: reqErr } =
+            await sb
+                .from('buy_coin_requests')
+                .update({
+                    status: 'approved'
+                })
+                .eq('id', requestId);
+
+        if (reqErr) throw reqErr;
+
+        alert(
+            'Coins Added Successfully'
+        );
+
+        window.loadBuyCoinRequests();
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(err.message);
+    }
+};
+
+window.rejectUpgrade = async (
+    requestId
+) => {
+
+    if (!confirm(
+        'Reject this upgrade request ?'
+    )) return;
+
+    try {
+
+        const { error } = await sb
+            .from('upgrade_requests')
+            .update({
+                status: 'rejected'
+            })
+            .eq('id', requestId)
+            .eq('status', 'pending');
+
+        if (error) throw error;
+
+        alert('Upgrade Rejected');
+
+        window.loadAdminUpgradeRequests();
+
+    } catch (err) {
+
+        alert(err.message);
+    }
+};
+// ==========================================
+// ADMIN RATE CONTROL
+// ==========================================
+window.updateGlobalRate = async () => {
+
+    const rate = parseFloat(
+        document.getElementById('new-coin-rate').value
+    );
+
+    if(isNaN(rate) || rate <= 0){
+        alert("Enter valid coin rate");
+        return;
+    }
+
+    const { data: settings } = await sb
+        .from('app_settings')
+        .select('*')
+        .single();
+
+    if(!settings){
+        alert("Settings not found");
+        return;
+    }
+
+    let history = settings.rate_history || [];
+
+    history.push({
+        time: new Date().toLocaleString(),
+        rate: rate
+    });
+
+    // keep last 500 records
+    if(history.length > 500){
+        history = history.slice(-500);
+    }
+
+    const { error: err1 } = await sb
+        .from('app_settings')
+        .update({
+            coin_rate: rate,
+            rate_history: history
+        })
+        .eq('id', settings.id);
+
+    const { error: err2 } = await sb
+        .from('rate_history')
+        .insert([{
+            rate: rate
+        }]);
+
+    if(!err1 && !err2){
+        alert("Rate Updated Successfully");
+    }else{
+        alert(
+            err1?.message ||
+            err2?.message ||
+            "Update failed"
+        );
+    }
+};
+
+// ==========================================
+// TAB CONTROLLER
+// ==========================================
+window.showTab = function(tabId, el){
+
+    document
+        .querySelectorAll('.tab-content')
+        .forEach(t => t.classList.add('hidden'));
+
+    document
+        .querySelectorAll('.admin-tab')
+        .forEach(t => t.classList.remove('active'));
+
+    const tab = document.getElementById(
+        'tab-' + tabId
+    );
+
+    if(tab){
+        tab.classList.remove('hidden');
+    }
+
+    if(el){
+        el.classList.add('active');
+    }
+
+    switch(tabId){
+
+        case 'approvals':
+            window.loadAdminApprovals();
+            break;
+
+        case 'withdrawals':
+            window.loadAdminWithdrawals();
+            break;
+
+        case 'settings':
+            window.loadAdminSettings();
+            break;
+
+        case 'upgrades':
+            window.loadAdminUpgradeRequests();
+            break;
+
+        case 'buycoins':
+            window.loadBuyCoinRequests();
+            break;
+    }
+};
+
+// ==========================================
+// START MINING
+// ==========================================
+window.startMiningCycle = async () => {
+
+    const uid = localStorage.getItem('user_id');
+
+    if(!uid){
+        alert("Login Required");
+        return;
+    }
+
+    const secureSessionActive =
+        await verifyActiveDeviceSession(uid);
+
+    if(!secureSessionActive) return;
+
+    const { data: active } = await sb
+        .from('mining_sessions')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if(active){
+        alert("Mining already running");
+        return;
+    }
+
+    let { data:user } = await sb
+        .from('users')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+    user = await checkAndResetDailyLimit(user);
+
+    const power =
+        await calculateFinalPower(user);
+
+    const currentMined =
+        Number(user.daily_mined_today || 0);
+
+    const maxCap =
+        Number(power.finalCap || 100);
+
+    if(currentMined >= maxCap){
+        alert("Daily cap reached");
+        return;
+    }
+
+    const reward =
+        Number(power.finalRate || 10);
+
+    const endTime =
+        new Date(
+            Date.now() + (30 * 60 * 1000)
+        );
+
+    const { error } = await sb
+        .from('mining_sessions')
+        .insert([{
+            user_id: uid,
+            end_time: endTime.toISOString(),
+            potential_coins: reward,
+            is_active: true
+        }]);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    alert("Mining Started 🚀");
+
+    await window.checkActiveMining();
+};
+
+// ==========================================
+// ACTIVE MINING CHECK
+// ==========================================
+window.checkActiveMining = async () => {
+
+    const uid = localStorage.getItem('user_id');
+
+    if(!uid) return;
+
+    const { data: session } = await sb
+        .from('mining_sessions')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if(!session) return;
+
+    const timerBox =
+        document.getElementById(
+            'cycle-timer-box'
+        );
+
+    const timerText =
+        document.getElementById(
+            'timer-text'
+        );
+
+    if(timerBox){
+        timerBox.style.display = 'block';
+    }
+
+    if(window.miningInterval){
+        clearInterval(window.miningInterval);
+    }
+
+    window.miningInterval =
+    setInterval(async ()=>{
+
+        const now = Date.now();
+
+        const end =
+            new Date(
+                session.end_time
+            ).getTime();
+
+        const diff = end - now;
+
+        if(diff <= 0){
+
+            clearInterval(
+                window.miningInterval
+            );
+
+            window.miningInterval = null;
+
+            if(timerText){
+                timerText.innerText = "00:00";
+            }
+
+            await window.claimMiningReward(
+                session
+            );
+
+            return;
+        }
+
+        const mins =
+            Math.floor(diff / 60000);
+
+        const secs =
+            Math.floor(
+                (diff % 60000) / 1000
+            );
+
+        if(timerText){
+            timerText.innerText =
+                `${mins}:${
+                    secs < 10 ? '0'+secs : secs
+                }`;
+        }
+
+    },1000);
+};
+
+// ==========================================
+// CLAIM REWARD
+// ==========================================
+window.claimMiningReward = async (session) => {
+
+    const uid =
+        localStorage.getItem('user_id');
+
+    if(!uid) return;
+
+    if(window.isClaimingInProgress){
+        return;
+    }
+
+    window.isClaimingInProgress = true;
+
+    try{
+
+        const secureSessionActive =
+            await verifyActiveDeviceSession(uid);
+
+        if(!secureSessionActive){
+            window.isClaimingInProgress = false;
+            return;
+        }
+
+        const { error: claimErr } =
+        await sb.rpc(
+            'secure_claim_mining_reward',
+            {
+                p_session_id: session.id,
+                p_user_id: uid
+            }
+        );
+
+        if(claimErr){
+            alert(claimErr.message);
+            window.isClaimingInProgress = false;
+            return;
+        }
+
+        const earnedCoins =
+            Number(
+                session.potential_coins || 0
+            );
+
+        await sb.rpc(
+            'distribute_passive_income',
+            {
+                p_claimant_id: uid,
+                p_amount_mined: earnedCoins
+            }
+        );
+
+        // GLOBAL MINING UPDATE
+        const { data: settings } =
+        await sb
+            .from('app_settings')
+            .select('id,global_mining')
+            .single();
+
+        if(settings){
+
+            await sb
+                .from('app_settings')
+                .update({
+                    global_mining:
+                        Number(
+                            settings.global_mining || 0
+                        ) + earnedCoins
+                })
+                .eq('id', settings.id);
+        }
+
+        alert(
+            `${earnedCoins} Coins Claimed Successfully`
+        );
+
+        await window.loadDashboardData();
+
+        location.reload();
+
+    }catch(err){
+
+        console.error(err);
+
+    }finally{
+
+        window.isClaimingInProgress = false;
+    }
+};
+// ==========================================
+// WITHDRAWAL SYSTEM
+// ==========================================
+window.submitWithdrawal = async () => {
+
+    const uid = localStorage.getItem('user_id');
+
+    if(!uid){
+        alert("Login Required");
+        return;
+    }
+
+    const amt = Number(
+        document.getElementById('withdraw-amount')?.value
+    );
+
+    const holder =
+        document.getElementById('bank-holder')?.value?.trim();
+
+    const acc =
+        document.getElementById('bank-account')?.value?.trim();
+
+    const ifsc =
+        document.getElementById('bank-ifsc')?.value?.trim().toUpperCase();
+
+    if(
+        !holder ||
+        !acc ||
+        !ifsc ||
+        !amt
+    ){
+        alert("Fill all bank details");
+        return;
+    }
+
+    if(acc.length < 8){
+        alert("Invalid Account Number");
+        return;
+    }
+
+    const { data: settings } = await sb
+        .from('app_settings')
+        .select('min_withdrawal,max_withdrawal')
+        .single();
+
+    const minAmt =
+        Number(settings?.min_withdrawal || 100);
+
+    const maxAmt =
+        Number(settings?.max_withdrawal || 10000);
+
+    if(amt < minAmt){
+        alert(`Minimum withdrawal ₹${minAmt}`);
+        return;
+    }
+
+    if(amt > maxAmt){
+        alert(`Maximum withdrawal ₹${maxAmt}`);
+        return;
+    }
+
+    const { data:user } = await sb
+        .from('users')
+        .select('wallet_balance')
+        .eq('id',uid)
+        .single();
+
+    if(!user){
+        alert("User not found");
+        return;
+    }
+
+    if(Number(user.wallet_balance) < amt){
+        alert("Insufficient Wallet Balance");
+        return;
+    }
+
+    const bankObj = {
+        holder,
+        acc,
+        ifsc
+    };
+
+    const { error } = await sb
+        .from('withdrawals')
+        .insert([{
+            user_id: uid,
+            amount: amt,
+            bank_details: bankObj,
+            status: 'pending'
+        }]);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    await sb
+        .from('users')
+        .update({
+            wallet_balance:
+                Number(user.wallet_balance) - amt
+        })
+        .eq('id',uid);
+
+    alert("Withdrawal Request Submitted");
+
+    window.hideWithdrawModal?.();
+
+    await window.loadDashboardData();
+
+    location.reload();
+};
+
+// ==========================================
+// WITHDRAW HISTORY
+// ==========================================
+window.loadHistory = async () => {
+
+    const uid =
+        localStorage.getItem('user_id');
+
+    const container =
+        document.getElementById('history-list');
+
+    if(!uid || !container) return;
+
+    container.innerHTML =
+        `<p style="text-align:center">Loading...</p>`;
+
+    const { data } = await sb
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', {
+            ascending:false
+        });
+
+    if(!data || data.length === 0){
+
+        container.innerHTML = `
+        <div style="
+            text-align:center;
+            color:#64748b;
+            padding:20px;
+        ">
+            No Withdrawal History
+        </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML =
+    data.map(w=>{
+
+        let accNo = "N/A";
+
+        try{
+
+            const bank =
+                typeof w.bank_details === 'string'
+                ? JSON.parse(w.bank_details)
+                : w.bank_details;
+
+            if(bank?.acc){
+                accNo =
+                    "****" +
+                    String(bank.acc).slice(-4);
+            }
+
+        }catch(err){
+            console.error(err);
+        }
+
+        const dt =
+            w.created_at
+            ? new Date(w.created_at)
+            : null;
+
+        const formattedDate =
+            dt
+            ? dt.toLocaleString('en-IN')
+            : 'Recent';
+         return `
+<div class="history-item">
+
+    <div class="history-top">
+
+        <div>
+
+            <div class="history-amount">
+                ₹${Number(w.amount).toFixed(2)}
+            </div>
+
+            <div class="history-bank">
+                💳 ${accNo}
+            </div>
+
+            <div class="history-date">
+                🕒 ${formattedDate}
+            </div>
+
+        </div>
+
+        <div class="history-status status-${String(w.status).toLowerCase()}">
+            ${String(w.status).toUpperCase()}
+        </div>
+
+    </div>
+
+</div>
+`;
+    }).join('');
+};
+
+// ==========================================
+// 10 LEVEL TEAM SYSTEM
+// ==========================================
+window.loadMultiLevelTeam = async () => {
+
+    const teamList =
+        document.getElementById('team-list');
+
+    const totalCount =
+        document.getElementById(
+            'total-members-count'
+        );
+
+    if(!teamList) return;
+
+    const phone =
+        localStorage.getItem('user_phone');
+
+    if(!phone) return;
+
+    try{
+
+        const { data: users } = await sb
+            .from('users')
+            .select(
+                'full_name,phone_number,referrer_id'
+            );
+
+        if(!users) return;
+
+        let finalTeam = [];
+        let parents = [phone];
+
+        for(
+            let lvl = 1;
+            lvl <= 10;
+            lvl++
+        ){
+
+            const members =
+                users.filter(u =>
+                    parents.includes(
+                        u.referrer_id
+                    )
+                );
+
+            if(members.length === 0){
+                break;
+            }
+
+            members.forEach(m=>{
+
+                finalTeam.push({
+                    level:lvl,
+                    name:
+                        m.full_name ||
+                        "Unknown",
+                    phone:
+                        m.phone_number ||
+                        "N/A"
+                });
+
+            });
+
+            parents =
+                members.map(
+                    m => m.phone_number
+                );
+        }
+
+        totalCount.innerText =
+            finalTeam.length;
+
+        if(finalTeam.length === 0){
+
+            teamList.innerHTML =
+            `
+            <p style="
+                text-align:center;
+                color:#64748b;
+            ">
+                No Team Members Yet
+            </p>
+            `;
+
+            return;
+        }
+
+        teamList.innerHTML = '';
+
+        finalTeam.forEach(member=>{
+
+            const hiddenPhone =
+                String(member.phone)
+                .slice(0,4) +
+                "****";
+
+            teamList.insertAdjacentHTML(
+                'beforeend',
+                `
+                <div class="member-item">
+
+                    <div>
+
+                        <div style="
+                            font-weight:700;
+                            font-size:15px;
+                        ">
+                            ${member.name}
+                        </div>
+
+                        <div style="
+                            color:#64748b;
+                            font-size:12px;
+                        ">
+                            ${hiddenPhone}
+                        </div>
+
+                    </div>
+
+                    <span class="
+                    lvl-badge
+                    lvl-${Math.min(member.level,5)}
+                    ">
+                        Level ${member.level}
+                    </span>
+
+                </div>
+                `
+            );
+
+        });
+
+    }catch(err){
+
+        console.error(err);
+
+    }
+};
+
+// ==========================================
+// AUTO RESUME MINING
+// ==========================================
+if(
+    localStorage.getItem('user_id') &&
+    window.location.pathname.includes(
+        'dashboard.html'
+    )
+){
+    setTimeout(()=>{
+        window.checkActiveMining();
+    },1000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if(document.getElementById('live-upi-id')) { window.loadRegisterSettings(); }
-});
+// ==========================================
+// PAGE INIT
+// ==========================================
+document.addEventListener(
+    'DOMContentLoaded',
+    async ()=>{
+
+        if(
+            document.getElementById(
+                'live-upi-id'
+            )
+        ){
+            if(
+                typeof window.loadRegisterSettings
+                === 'function'
+            ){
+                await window.loadRegisterSettings();
+            }
+        }
+
+    }
+);
