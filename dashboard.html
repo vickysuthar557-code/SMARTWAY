@@ -918,7 +918,11 @@
     <i class="fas fa-sign-out-alt"></i>  
 </div>
 
-</div>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>  <script src="app.js"></script>  <script>  
+</div>  
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.0"></script>  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script> 
+<script src="app.js"></script>  <script>  
 window.showWithdrawModal = () => {  
     document.getElementById('withdraw-modal').style.display = 'flex';  
   
@@ -967,120 +971,7 @@ window.openUpgradeModal = () => {
 window.closeUpgradeModal = () => {  
     document.getElementById('upgrade-plan-modal').style.display = 'none';  
 };  
-window.buildFreshLiveChart = (points = [], labels = []) => {  
-  
-    // 🚨 prevent double rebuild crash  
-    if (window.isChartRebuilding) return;  
-    window.isChartRebuilding = true;  
-  
-    try {  
-  
-        if (window.liveChart) {  
-            window.liveChart.destroy();  
-            window.liveChart = null;  
-        }  
-  
-        const canvas = document.getElementById('rateChartLive');  
-        if (!canvas) return;  
-  
-        const ctx = canvas.getContext('2d');  
-  
-        const grad = ctx.createLinearGradient(0, 0, 0, 250);  
-        grad.addColorStop(0, 'rgba(255,140,0,0.35)');  
-        grad.addColorStop(1, 'rgba(255,140,0,0)');  
-  
-        window.liveChart = new Chart(ctx, {  
-            type: 'line',  
-            data: {  
-                labels: labels,  
-                datasets: [{  
-                    data: points.map(v => Number(v)),  
-  
-                    borderColor: (ctx) => {  
-                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 500, 0);  
-  
-                        gradient.addColorStop(0, '#00e5ff');  
-                        gradient.addColorStop(0.5, '#ff8c00');  
-                        gradient.addColorStop(1, '#22c55e');  
-  
-                        return gradient;  
-                    },  
-  
-                    borderWidth: 3,  
-                    fill: true,  
-                    backgroundColor: grad,  
-                    tension: 0.35,  
-                    pointRadius: 3,  
-                    pointHoverRadius: 8,  
-                    pointBackgroundColor: '#ffffff',  
-                    pointBorderColor: '#ff8c00',  
-                    pointBorderWidth: 2,  
-                    pointHitRadius: 12  
-                }]  
-            },  
-  
-            options: {  
-                responsive: true,  
-                maintainAspectRatio: false,  
-  
-                animation: { duration: 400 },  
-  
-                interaction: {  
-                    intersect: false,  
-                    mode: 'index'  
-                },  
-  
-                plugins: {  
-                    legend: { display: false },  
-  
-                    tooltip: {  
-                        backgroundColor: '#0f172a',  
-                        titleColor: '#fff',  
-                        bodyColor: '#fff',  
-                        borderColor: '#ff8c00',  
-                        borderWidth: 1,  
-                        displayColors: false,  
-                        callbacks: {  
-                            label: (context) =>  
-                                '₹' + Number(context.parsed.y).toFixed(2)  
-                        }  
-                    },  
-  
-                    zoom: {  
-                        pan: { enabled: true, mode: 'x' },  
-                        zoom: {  
-                            wheel: { enabled: true },  
-                            pinch: { enabled: true },  
-                            drag: { enabled: true },  
-                            mode: 'x'  
-                        }  
-                    }  
-                },  
-  
-                scales: {  
-                    x: {  
-                        grid: { display: false },  
-                        ticks: {  
-                            color: '#64748b',  
-                            maxTicksLimit: 10  
-                        }  
-                    },  
-                    y: {  
-                        grace: '10%',  
-                        grid: { color: 'rgba(255,255,255,0.05)' },  
-                        ticks: {  
-                            color: '#94a3b8',  
-                            callback: v => '₹' + Number(v).toFixed(2)  
-                        }  
-                    }  
-                }  
-            }  
-        });  
-  
-    } finally {  
-        window.isChartRebuilding = false;  
-    }  
-};  
+
 window.addEventListener(  
     'DOMContentLoaded',  
     async () => {  
