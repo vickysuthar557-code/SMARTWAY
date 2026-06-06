@@ -545,6 +545,120 @@ window.liveChart = null;
 
 // ✅ ADD THIS HERE (GLOBAL LOCK FLAG)
 window.isChartRebuilding = false;
+window.buildFreshLiveChart = (points = [], labels = []) => {  
+  
+    // 🚨 prevent double rebuild crash  
+    if (window.isChartRebuilding) return;  
+    window.isChartRebuilding = true;  
+  
+    try {  
+  
+        if (window.liveChart) {  
+            window.liveChart.destroy();  
+            window.liveChart = null;  
+        }  
+  
+        const canvas = document.getElementById('rateChartLive');  
+        if (!canvas) return;  
+  
+        const ctx = canvas.getContext('2d');  
+  
+        const grad = ctx.createLinearGradient(0, 0, 0, 250);  
+        grad.addColorStop(0, 'rgba(255,140,0,0.35)');  
+        grad.addColorStop(1, 'rgba(255,140,0,0)');  
+  
+        window.liveChart = new Chart(ctx, {  
+            type: 'line',  
+            data: {  
+                labels: labels,  
+                datasets: [{  
+                    data: points.map(v => Number(v)),  
+  
+                    borderColor: (ctx) => {  
+                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 500, 0);  
+  
+                        gradient.addColorStop(0, '#00e5ff');  
+                        gradient.addColorStop(0.5, '#ff8c00');  
+                        gradient.addColorStop(1, '#22c55e');  
+  
+                        return gradient;  
+                    },  
+  
+                    borderWidth: 3,  
+                    fill: true,  
+                    backgroundColor: grad,  
+                    tension: 0.1,  
+                    pointRadius: 1,  
+                    pointHoverRadius: 5,  
+                    pointBackgroundColor: '#ffffff',  
+                    pointBorderColor: '#ff8c00',  
+                    pointBorderWidth: 2,  
+                    pointHitRadius: 12  
+                }]  
+            },  
+  
+            options: {  
+                responsive: true,  
+                maintainAspectRatio: false,  
+  
+                animation: { duration: 400 },  
+  
+                interaction: {  
+                    intersect: false,  
+                    mode: 'index'  
+                },  
+  
+                plugins: {  
+                    legend: { display: false },  
+  
+                    tooltip: {  
+                        backgroundColor: '#0f172a',  
+                        titleColor: '#fff',  
+                        bodyColor: '#fff',  
+                        borderColor: '#ff8c00',  
+                        borderWidth: 1,  
+                        displayColors: false,  
+                        callbacks: {  
+                            label: (context) =>  
+                                '₹' + Number(context.parsed.y).toFixed(2)  
+                        }  
+                    },  
+  
+                    zoom: {  
+                        pan: { enabled: true, mode: 'x' },  
+                        zoom: {  
+                            wheel: { enabled: true },  
+                            pinch: { enabled: true },  
+                            drag: { enabled: true },  
+                            mode: 'x'  
+                        }  
+                    }  
+                },  
+  
+                scales: {  
+                    x: {  
+                        grid: { display: false },  
+                        ticks: {  
+                            color: '#64748b',  
+                            maxTicksLimit: 10  
+                        }  
+                    },  
+                    y: {  
+                        grace: '10%',  
+                        grid: { color: 'rgba(255,255,255,0.05)' },  
+                        ticks: {  
+                            color: '#94a3b8',  
+                            callback: v => '₹' + Number(v).toFixed(2)  
+                        }  
+                    }  
+                }  
+            }  
+        });  
+  
+    } finally {  
+        window.isChartRebuilding = false;  
+    }  
+};  
 window.changeTimeframe = async (tf, btn = null) => {
 
     window.currentChartTimeframe = tf;
@@ -555,9 +669,9 @@ window.changeTimeframe = async (tf, btn = null) => {
 
     if (btn) btn.classList.add('active');
 
-    let limit = 30;
+    let limit = 15;
 
-    if (tf === '5M') limit = 60;
+    if (tf === '5M') limit = 45;
     if (tf === '1H') limit = 120;
 
     const { data: history, error } = await sb
@@ -628,7 +742,7 @@ window.startChartLoop = async () => {
     if (window.chartIntervalEngine)
         clearInterval(window.chartIntervalEngine);
 
-    let speed = 3000;
+    let speed = 5000;
 
     if (window.currentChartTimeframe === '5M') {
         speed = 15000;
@@ -644,7 +758,7 @@ window.startChartLoop = async () => {
         if (!settings) return;
 
         const base = Number(settings.coin_rate || 1);
-        const move = (Math.random() * 0.4) - 0.2;
+        const move = (Math.random() * 0.6) - 0.3;
 
         const liveRate = Number((base + move).toFixed(2));
 
@@ -667,7 +781,7 @@ window.startChartLoop = async () => {
                 })
             );
 
-            if (data.length > 120) {
+            if (data.length > 20) {
                 data.shift();
                 labels.shift();
             }
@@ -1395,8 +1509,8 @@ window.updateGlobalRate = async () => {
     });
 
     // keep last 500 records
-    if(history.length > 500){
-        history = history.slice(-500);
+    if(history.length > 1000){
+        history = history.slice(-1000);
     }
 
     const { error: err1 } = await sb
