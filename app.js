@@ -120,8 +120,13 @@ window.handleRegistration = async () => {
     const { error } = await sb.from('users').insert([{
         full_name: name, phone_number: phone, password_hash: pass,
         referrer_id: ref || null, package_id: pkg, utr_number: utr,
-        is_approved: false, wallet_balance: 0, mining_balance: 0, 
-        daily_mined_today: 0, last_reset_date: todayStr,
+        is_approved: false,
+         wallet_balance: 0,
+         mining_balance: 0,
+         mined_coins: 0,
+         bought_coins: 0,
+         daily_mined_today: 0,
+        last_reset_date: todayStr,
         rate_boost: 0, cap_boost: 0, total_earned_till_date: 0, is_degraded: false
     }]);
 
@@ -346,22 +351,233 @@ window.loadDashboardData = async () => {
                 freshUser.wallet_balance || 0
             ).toFixed(2)}`;
     }
+// =====================================
+// PURCHASE HISTORY
+// =====================================
 
-    // =====================================
-    // Coin Balance
-    // =====================================
-    const coinEl =
+const { data: purchases } = await sb
+    .from('coin_purchase_history')
+    .select('coins,amount')
+    .eq('user_id', uid);
+
+let invested = 0;
+let boughtQty = 0;
+
+(purchases || []).forEach(p => {
+
+    invested += Number(p.amount || 0);
+
+    boughtQty += Number(p.coins || 0);
+
+});
+
+// GLOBAL STORE
+window.userBoughtQty = boughtQty;
+window.userInvested = invested;
+
+console.log(
+    'PURCHASE DATA',
+    {
+        boughtQty,
+        invested
+    }
+);
+// =====================================
+// TRANSFER HISTORY
+// =====================================
+
+const { data: transfers } = await sb
+    .from('coin_transfers')
+    .select('*')
+    .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+    .order('created_at', { ascending: false });
+
+window.userTransfers = transfers || [];
+
+console.log("TRANSFER HISTORY", transfers);
+// =====================================
+// SELL HISTORY
+// =====================================
+
+const { data: sells } = await sb
+    .from('coin_sell_history')
+    .select('*')
+    .eq('user_id', uid)
+    .order('created_at', { ascending: false });
+
+window.userSellHistory = sells;
+console.log("SELL HISTORY", sells);
+// =====================================
+// PROFIT / LOSS (LIVE RATE)
+// =====================================
+window.updatePortfolioPL = (
+    currentBoughtCoins,
+    invested
+) => {
+
+    const rate =
+        Number(window.currentLiveRate || 0);
+
+    const currentValue =
+        Number(currentBoughtCoins || 0) * rate;
+
+    const profitLoss =
+        currentValue - Number(invested || 0);
+
+    const plEl =
         document.getElementById(
-            'coin-count'
+            'profit-loss'
         );
 
-    if (coinEl) {
-        coinEl.innerText =
-            Number(
-                freshUser.mining_balance || 0
-            ).toFixed(2);
+    if (plEl) {
+
+        plEl.innerText =
+            `${profitLoss >= 0 ? '+' : ''}₹${profitLoss.toFixed(2)}`;
+
+        plEl.style.color =
+            profitLoss >= 0
+                ? '#22c55e'
+                : '#ef4444';
     }
 
+    const valueEl =
+        document.getElementById(
+            'current-portfolio-value'
+        );
+
+    if (valueEl) {
+        valueEl.innerText =
+            `₹${currentValue.toFixed(2)}`;
+    }
+
+    const percentEl =
+        document.getElementById(
+            'profit-loss-percent'
+        );
+
+    if (
+        percentEl &&
+        Number(invested) > 0
+    ) {
+
+        const percent =
+            (
+                profitLoss /
+                Number(invested)
+            ) * 100;
+
+        percentEl.innerText =
+            `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+
+        percentEl.style.color =
+            percent >= 0
+                ? '#22c55e'
+                : '#ef4444';
+    }
+};
+// =====================================
+// COIN BALANCES
+// =====================================
+
+const legacyCoins =
+    Number(freshUser.mining_balance || 0);
+
+const minedCoins =
+    Number(freshUser.mined_coins || 0);
+
+const boughtCoins =
+    Number(freshUser.bought_coins || 0);
+
+const totalCoins =
+    legacyCoins +
+    minedCoins +
+    boughtCoins;
+// Total Coins
+
+const coinEl =
+    document.getElementById(
+        'coin-count'
+    );
+
+if (coinEl) {
+    coinEl.innerText =
+        totalCoins.toFixed(2);
+}
+
+// Mined Coins
+
+const minedEl =
+    document.getElementById(
+        'mined-coins'
+    );
+
+if (minedEl) {
+    minedEl.innerText =
+        minedCoins.toFixed(2);
+}
+
+// Bought Coins
+
+const boughtEl =
+    document.getElementById(
+        'bought-coins'
+    );
+
+if (boughtEl) {
+    boughtEl.innerText =
+        boughtCoins.toFixed(2);
+}
+const boughtCountEl =
+document.getElementById(
+'bought-coins-count'
+);
+
+if(boughtCountEl){
+
+boughtCountEl.innerText =
+boughtCoins.toFixed(2);
+
+}
+const currentRate =
+    Number(settings?.coin_rate || 0);
+window.currentLiveRate = currentRate;
+console.log("COIN DEBUG", {
+    legacyCoins,
+    minedCoins,
+    boughtCoins,
+    totalCoins,
+    currentRate
+});
+
+console.log("VALUE DEBUG", {
+    totalCoins,
+    currentRate,
+    totalValue: totalCoins * currentRate
+});
+window.updatePortfolioPL(
+    boughtQty,
+    invested
+);
+const totalValue =
+    totalCoins * currentRate;
+console.log({
+    totalCoins,
+    currentRate,
+    totalValue
+});
+const inrEl =
+    document.getElementById(
+        'coin-inr-value'
+    );
+
+if (inrEl) {
+    inrEl.innerText =
+        `₹${totalValue.toFixed(2)}`;
+}
+console.log(
+    "DOM INR VALUE",
+    inrEl?.innerText
+);
     // =====================================
     // Package Name Fix
     // =====================================
@@ -511,6 +727,24 @@ window.loadDashboardData = async () => {
         'Dashboard Loaded Successfully'
     );
 };
+// ==========================================
+// DASHBOARD AUTO REFRESH
+// ==========================================
+
+document.addEventListener(
+    'DOMContentLoaded',
+    async () => {
+
+        await loadDashboardData();
+
+        setInterval(async () => {
+
+            await loadDashboardData();
+
+        }, 10000); // 10 sec
+
+    }
+);
 // ==========================================
 // ECONOMY & COIN CONVERSION (SECURE RPC BACKEND)
 // ==========================================
@@ -676,7 +910,7 @@ window.changeTimeframe = async (tf, btn = null) => {
 
     const { data: history, error } = await sb
         .from('rate_history')
-        .select('*')
+          .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -762,9 +996,49 @@ window.startChartLoop = async () => {
 
         const liveRate = Number((base + move).toFixed(2));
 
-        const rateEl = document.getElementById('current-coin-rate-text');
-        if (rateEl) rateEl.innerText = `₹${liveRate}`;
+window.currentLiveRate = liveRate;
 
+console.log(
+    'LIVE UPDATE',
+    {
+        qty: window.userBoughtQty,
+        invested: window.userInvested,
+        rate: liveRate
+    }
+);
+
+if (
+    window.userBoughtQty !== undefined &&
+    window.userInvested !== undefined
+) {
+
+    window.updatePortfolioPL(
+        window.userBoughtQty,
+        window.userInvested
+    );
+}
+
+const rateEl = document.getElementById(
+    'current-coin-rate-text'
+);
+
+if (rateEl)
+    rateEl.innerText = `₹${liveRate}`;
+const inrEl =
+document.getElementById(
+    'coin-inr-value'
+);
+
+if (inrEl) {
+const totalCoins =
+    parseFloat(
+        document.getElementById('coin-count')
+        ?.innerText?.replace(/,/g,'') || 0
+    );
+    
+    inrEl.innerText =
+        `₹${(totalCoins * liveRate).toFixed(2)}`;
+}
         // SAFE UPDATE (no chart crash)
         if (window.liveChart) {
 
@@ -913,7 +1187,7 @@ window.openBuyCoinModal = async () => {
         }
 
         modal.style.display = 'flex';
-
+       await window.loadBuyHistory();
         if (!window.sb) {
             alert("Database connection not ready");
             return;
@@ -1069,6 +1343,262 @@ window.submitBuyCoinRequest = async () => {
     } catch (err) {
         alert(err.message);
     }
+};
+window.openTransferModal = async () => {
+
+    document.getElementById(
+        'transfer-modal'
+    ).style.display = 'flex';
+
+    await window.loadTransferHistory();
+};
+// ==========================================
+// COIN TRANSFER SYSTEM
+// ==========================================
+window.transferCoins = async () => {
+
+    const uid = localStorage.getItem('user_id');
+    const phone = document.getElementById('transfer-phone').value.trim();
+    const qty = Number(document.getElementById('transfer-qty').value);
+
+    if(!phone || qty <= 0){
+        return alert("Enter valid details");
+    }
+
+    const secure = await verifyActiveDeviceSession(uid);
+    if(!secure) return;
+
+    const { data: receiver } = await sb
+        .from('users')
+        .select('id')
+        .eq('phone_number', phone)
+        .single();
+
+    if(!receiver){
+        return alert("Receiver not found");
+    }
+
+    const { error } = await sb.rpc('secure_transfer_coins', {
+        p_sender: uid,
+        p_receiver: receiver.id,
+        p_qty: qty,
+    });
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    alert("Transfer successful (10% fee applied)");
+    window.loadDashboardData();
+};
+window.loadTransferHistory = async () => {
+
+    const uid = localStorage.getItem('user_id');
+
+    const { data, error } = await sb
+        .from('coin_transfers')
+        .select('*')
+        .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
+        .order('created_at', { ascending: false });
+
+    const box = document.getElementById(
+        'transfer-history-list'
+    );
+
+    if (error) {
+
+        console.error(error);
+
+        box.innerHTML =
+            '<div class="empty-history">Failed To Load History</div>';
+
+        return;
+    }
+
+    if (!data?.length) {
+
+        box.innerHTML =
+            '<div class="empty-history">No Transfers Found</div>';
+
+        return;
+    }
+
+    box.innerHTML = data.map(x => {
+
+        const isSent =
+            String(x.sender_id) === String(uid);
+
+        const type =
+            isSent ? 'Sent' : 'Received';
+
+        const badgeClass =
+            isSent
+                ? 'sent-badge'
+                : 'received-badge';
+
+        return `
+
+        <div class="transfer-history-item">
+
+            <div class="history-top">
+
+                <span class="history-title">
+                    Coin Transfer
+                </span>
+
+                <span class="history-status ${badgeClass}">
+                    ${type}
+                </span>
+
+            </div>
+
+            <div class="history-amount">
+                ${Number(x.coins).toFixed(2)} SMC
+            </div>
+
+            <div class="phone-row">
+
+                ${
+                    isSent
+                    ? `To : ${x.receiver_phone || 'N/A'}`
+                    : `From : ${x.sender_phone || 'N/A'}`
+                }
+
+            </div>
+
+            <div class="history-sub">
+
+                Fee :
+                ${Number(x.fee || 0).toFixed(2)}
+                SMC
+
+            </div>
+
+            <div class="history-sub">
+
+                Net :
+                ${Number(x.net_coins || 0).toFixed(2)}
+                SMC
+
+            </div>
+
+            <div class="history-sub">
+
+                ${new Date(
+                    x.created_at
+                ).toLocaleString()}
+
+            </div>
+
+        </div>
+
+        `;
+
+    }).join('');
+
+};
+
+window.loadSellHistory = async () => {
+
+    const uid = localStorage.getItem('user_id');
+
+    const { data } = await sb
+        .from('coin_sell_history')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at',{ascending:false});
+
+    const box =
+        document.getElementById(
+            'sell-history-list'
+        );
+
+    if(!data?.length){
+
+        box.innerHTML =
+        '<div class="empty-history">No Sell History</div>';
+
+        return;
+    }
+
+    box.innerHTML = data.map(x=>`
+
+        <div class="sell-history-item">
+
+            <div class="history-top">
+                <span class="history-title">
+                    Coin Sell
+                </span>
+
+                <span class="history-status success">
+                    Completed
+                </span>
+            </div>
+
+            <div class="history-amount">
+                ${x.coins} SMC
+            </div>
+
+            <div class="history-sub">
+                Received ₹${x.amount}
+            </div>
+
+        </div>
+
+    `).join('');
+};
+window.loadBuyHistory = async () => {
+
+    const uid =
+    localStorage.getItem('user_id');
+
+    const { data } = await sb
+        .from('coin_purchase_history')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at',{
+            ascending:false
+        });
+
+    const box =
+    document.getElementById(
+        'buy-history-list'
+    );
+
+    if(!data?.length){
+
+        box.innerHTML =
+        '<div class="empty-history">No Buy History</div>';
+
+        return;
+    }
+
+    box.innerHTML = data.map(x=>`
+
+        <div class="buy-history-item">
+
+            <div class="history-top">
+                <span class="history-title">
+                    Buy Order
+                </span>
+
+                <span class="history-status success">
+                    Completed
+                </span>
+            </div>
+
+            <div class="history-amount">
+                ${x.coins} SMC
+            </div>
+
+            <div class="history-sub">
+                Amount Paid ₹${x.amount}
+            </div>
+
+        </div>
+
+    `).join('');
 };
 // ==========================================
 // ADMIN EXTENSION MODULES
@@ -1365,7 +1895,6 @@ window.approveUpgrade = async (
 // ==========================================
 // BUY COIN APPROVAL
 // ==========================================
-
 window.approveBuyCoin = async (
     requestId,
     userId,
@@ -1380,7 +1909,7 @@ window.approveBuyCoin = async (
 
         const { data: req } = await sb
             .from('buy_coin_requests')
-            .select('status')
+            .select('*')
             .eq('id', requestId)
             .single();
 
@@ -1390,15 +1919,13 @@ window.approveBuyCoin = async (
         }
 
         if (req.status !== 'pending') {
-            alert(
-                'Request Already Processed'
-            );
+            alert('Request Already Processed');
             return;
         }
 
         const { data: user } = await sb
             .from('users')
-            .select('mining_balance')
+            .select('bought_coins')
             .eq('id', userId)
             .single();
 
@@ -1407,22 +1934,32 @@ window.approveBuyCoin = async (
             return;
         }
 
-        const currentCoins =
-            Number(user.mining_balance || 0);
-
         const { error: userErr } =
             await sb
                 .from('users')
                 .update({
-
-                    mining_balance:
-                        currentCoins +
+                    bought_coins:
+                        Number(user.bought_coins || 0) +
                         Number(qty)
-
                 })
                 .eq('id', userId);
 
         if (userErr) throw userErr;
+
+        // Purchase History Save
+        const { error: historyErr } =
+            await sb
+                .from('coin_purchase_history')
+                .insert([{
+                    user_id: userId,
+                    coins: Number(qty),
+                    amount: Number(req.amount || 0),
+                    rate:
+                        Number(req.amount || 0) /
+                        Number(qty)
+                }]);
+
+        if (historyErr) throw historyErr;
 
         const { error: reqErr } =
             await sb
@@ -1434,9 +1971,7 @@ window.approveBuyCoin = async (
 
         if (reqErr) throw reqErr;
 
-        alert(
-            'Coins Added Successfully'
-        );
+        alert('Coins Added Successfully');
 
         window.loadBuyCoinRequests();
 
@@ -1447,7 +1982,6 @@ window.approveBuyCoin = async (
         alert(err.message);
     }
 };
-
 window.rejectUpgrade = async (
     requestId
 ) => {
