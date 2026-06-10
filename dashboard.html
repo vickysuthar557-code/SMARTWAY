@@ -492,30 +492,78 @@
 </div>  
 
 <div style="height:20px;"></div>
+<div class="portfolio-summary">
 
+    <div class="portfolio-card value-card">
+        <span class="portfolio-label">
+            Total Portfolio Value
+        </span>
+
+        <div id="coin-inr-value" class="portfolio-value">
+            ₹0
+        </div>
+    </div>
+
+    <div class="portfolio-card pnl-card">
+        <span class="portfolio-label">
+            Profit / Loss
+        </span>
+
+        <div id="profit-loss" class="portfolio-value">
+            ₹0
+        </div>
+    </div>
+
+</div>
+<div class="global-mining-card">
+
+    <div class="gm-header">
+        <div class="gm-icon">
+            <i class="fas fa-coins"></i>
+        </div>
+
+        <div class="gm-title">
+            BOUGHT COINS
+        </div>
+    </div>
+
+    <div class="gm-value">
+        <span id="bought-coins-count">0</span>
+        <small>SWC</small>
+    </div>
+
+    <div class="gm-subtext">
+        Total coins purchased from market
+    </div>
+
+    <div class="gm-glow-bar"></div>
+
+</div>
    <!-- ================= ACTION BUTTONS ================= -->  
 <div class="action-grid">
 
-    <button class="btn-action btn-buy"
-            onclick="window.openBuyCoinModal()">
-        BUY COINS
-    </button>
+<button class="btn-action btn-buy"
+onclick="window.openBuyCoinModal()">
+BUY COINS
+</button>
 
-    <button class="btn-action btn-convert"
-            onclick="window.openSellModal()">
-        <i class="fas fa-sync-alt"></i>
-        CONVERT COINS
-    </button>
+<button class="btn-action btn-convert"
+onclick="window.openSellModal()">
+CONVERT
+</button>
 
-    <button class="btn-action btn-withdraw withdraw-center"
-            onclick="window.showWithdrawModal()">
-        <i class="fas fa-paper-plane"></i>
-        WITHDRAW
-    </button>
+<button class="btn-action btn-transfer"
+onclick="window.openTransferModal()">
+TRANSFER
+</button>
+
+<button class="btn-action btn-withdraw"
+onclick="window.showWithdrawModal()">
+WITHDRAW
+</button>
 
 </div>
 <!-- ================= REFERRAL & PASSIVE INCOME SECTION ================= -->
-
 <div class="earning-guide-container">
 
     <a href="https://t.me/smcmining" target="_blank" class="tg-support-card">
@@ -795,11 +843,73 @@
         style="width:100%;">
         CLOSE
       </button>
+<hr style="margin:15px 0;">
 
+<h4>Sell History</h4>
+
+<div id="sell-history-list">
+Loading...
+</div>
     </div>
 
   </div>
 
+</div>
+<div id="transfer-modal"
+class="modal-overlay"
+style="display:none;">
+
+<div class="modal-content glass-panel scrollable-modal">
+
+<h3>Transfer Coins</h3>
+
+<input
+id="transfer-phone"
+type="text"
+placeholder="Receiver Phone Number"
+class="input-theme">
+
+<input
+id="transfer-qty"
+type="number"
+placeholder="Coin Quantity"
+class="input-theme">
+
+<p style="
+text-align:center;
+color:#facc15;
+font-size:12px;
+">
+10% Transfer Fee Applied
+</p>
+
+<button
+class="btn-action btn-transfer"
+onclick="window.transferCoins()">
+TRANSFER NOW
+</button>
+
+<button
+class="btn-action btn-withdraw"
+onclick="window.closeTransferModal()">
+CLOSE
+</button>
+
+<hr style="margin:15px 0;">
+
+<h4 style="
+color:#fff;
+margin-bottom:10px;
+text-align:center;
+">
+Transfer History
+</h4>
+
+<div id="transfer-history-list">
+Loading...
+</div>
+
+</div>
 </div>
 <!-- ================= BUY MODAL ================= -->  
 <div id="buy-coin-modal" class="modal-overlay" style="display:none;">    <div class="modal-content glass-panel"  
@@ -902,8 +1012,16 @@
   style="width:100%;margin-top:8px;">  
   CLOSE  
 </button>
+<hr style="margin:15px 0;">
 
-  </div>  </div>  <div class="bottom-nav">  
+<h4>Buy History</h4>
+
+<div id="buy-history-list">
+Loading...
+</div>
+  </div>  
+  </div>  
+  <div class="bottom-nav">  
     <div class="nav-item active">  
         <i class="fas fa-home"></i>  
     </div>  <div class="nav-item" onclick="location.href='refer.html'">  
@@ -935,27 +1053,31 @@ window.hideWithdrawModal = () => {
     document.getElementById('withdraw-modal').style.display = 'none';  
 };  
   
-window.openSellModal = () => {  
-  
-    const modal = document.getElementById('sell-coins-modal');  
-    const input = document.getElementById('custom-sell-amount');  
-    const available = document.getElementById('modal-available-coins');  
-    const coinCount = document.getElementById('coin-count');  
-  
-    if (!modal) {  
-        console.error("SELL MODAL NOT FOUND");  
-        alert("Sell modal missing in HTML");  
-        return;  
-    }  
-  
-    if (input) input.value = '';  
-  
-    if (available && coinCount) {  
-        available.innerText = coinCount.innerText || '0';  
-    }  
-  
-    modal.style.display = 'flex';  
-};  
+window.openSellModal = async () => {
+
+    const modal = document.getElementById('sell-coins-modal');
+    const input = document.getElementById('custom-sell-amount');
+    const available = document.getElementById('modal-available-coins');
+    const coinCount = document.getElementById('coin-count');
+
+    if (!modal) {
+        alert('Sell Modal Missing');
+        return;
+    }
+
+    if (input) input.value = '';
+
+    if (available && coinCount) {
+        available.innerText = coinCount.innerText || '0';
+    }
+
+    modal.style.display = 'flex';
+
+    if (typeof window.loadSellHistory === 'function') {
+        await window.loadSellHistory();
+    }
+};
+
 window.closeSellModal = () => {  
     const modal = document.getElementById('sell-coins-modal');  
     if (modal) modal.style.display = 'none';  
@@ -971,7 +1093,31 @@ window.openUpgradeModal = () => {
 window.closeUpgradeModal = () => {  
     document.getElementById('upgrade-plan-modal').style.display = 'none';  
 };  
+window.openTransferModal = async () => {
 
+const modal =
+document.getElementById('transfer-modal');
+
+if(modal){
+modal.style.display='flex';
+}
+
+if(typeof window.loadTransferHistory === 'function'){
+await window.loadTransferHistory();
+}
+
+};
+
+window.closeTransferModal = () => {
+
+const modal =
+document.getElementById('transfer-modal');
+
+if(modal){
+modal.style.display='none';
+}
+
+};
 window.addEventListener(  
     'DOMContentLoaded',  
     async () => {  
@@ -1007,15 +1153,19 @@ window.addEventListener(
   
         window.buildFreshLiveChart();  
   
-        try {  
-  
-            await window.loadDashboardData();  
-  
-            await window.changeTimeframe(  
-                '1M'  
-            );  
-  
-            await window.checkActiveMining();  
+        try {
+
+    await window.loadDashboardData();
+
+await window.loadHistory();
+
+if (typeof window.loadBuyHistory === 'function') {
+    await window.loadBuyHistory();
+}
+
+    await window.changeTimeframe('1M');
+
+    await window.checkActiveMining();  
   
             if (  
                 typeof window  
