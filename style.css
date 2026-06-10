@@ -157,9 +157,10 @@ body {
 
 /* Central Massive Engine Block Mining Card Setup */
 .mining-container {
-    padding: 25px 20px;
-    text-align: center;
-    margin-bottom: 22px;
+    padding:25px 20px;
+    text-align:center;
+    margin-bottom:22px;
+    margin-top:18px;
 }
 .section-title {
     font-size: 15px;
@@ -424,10 +425,12 @@ chart-wrapper {
     padding: 20px;
 }
 .modal-content {
-    width: 100%;
-    max-width: 400px;
-    padding: 26px;
-    border-radius: 32px;
+    width:100%;
+    max-width:400px;
+    padding:26px;
+    border-radius:32px;
+    z-index:10000;
+    position:relative;
     animation: modalEntrance 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-content h3 {
@@ -731,23 +734,6 @@ chart-wrapper {
     z-index: 10;
     transform: none !important;
 } 
-.modal-overlay{
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.6);
-    z-index:9999;
-    justify-content:center;
-    align-items:center;
-}
-
-.modal-content{
-    z-index:10000;
-    position:relative;
-}
 .btn-buy {
     background: linear-gradient(135deg,#73b607f3,#95dc23f3);
     color: #0f172a;
@@ -768,10 +754,6 @@ chart-wrapper {
 
     /* 👇 GAP FIX */
     margin-bottom: 18px;
-}
-
-.mining-container {
-    margin-top: 18px;
 }
 
 /* HEADER */
@@ -1119,4 +1101,223 @@ chart-wrapper {
     background:#38bdf8;
     color:#0f172a;
     font-weight:700;
+}
+.dashboard-card{
+    flex:1;
+    padding:18px;
+    border-radius:18px;
+    text-align:center;
+}
+
+.dashboard-card h3{
+    font-size:13px;
+    color:#94a3b8;
+    margin-bottom:10px;
+}
+
+.big-number{
+    font-size:24px;
+    font-weight:700;
+    color:#fff;
+}
+.premium-buy-card{
+
+    background:
+    linear-gradient(
+        135deg,
+        #0f172a,
+        #1e293b
+    );
+
+    border:1px solid
+    rgba(255,255,255,.08);
+
+    color:white;
+
+    box-shadow:
+    0 10px 30px
+    rgba(0,0,0,.35);
+
+    transition:.3s;
+}
+
+.premium-buy-card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 15px 40px
+    rgba(0,0,0,.45);
+}
+
+.premium-buy-card h3{
+
+    color:#94a3b8;
+}
+
+.premium-buy-card .big-number{
+
+    color:#22c55e;
+    font-weight:700;
+}
+.portfolio-summary{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-top:15px;
+margin-bottom:20px;
+}
+
+.portfolio-card{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+border:1px solid rgba(255,255,255,.08);
+border-radius:18px;
+padding:18px;
+}
+
+.portfolio-label{
+font-size:11px;
+color:#94a3b8;
+text-transform:uppercase;
+letter-spacing:1px;
+display:block;
+margin-bottom:8px;
+}
+
+.portfolio-value{
+font-size:24px;
+font-weight:800;
+color:#fff;
+}
+
+.value-card{
+box-shadow:0 0 20px rgba(56,189,248,.15);
+}
+
+.pnl-card{
+box-shadow:0 0 20px rgba(74,222,128,.15);
+}
+
+
+.buy-history-item .amount{
+font-size:18px;
+font-weight:700;
+color:#38bdf8;
+}
+
+.buy-history-item .status{
+font-size:11px;
+padding:4px 10px;
+border-radius:20px;
+}
+.sell-history-item{
+background:#0f172a;
+border:1px solid rgba(74,222,128,.15);
+padding:12px;
+border-radius:14px;
+margin-bottom:10px;
+}
+.buy-history-item,
+.sell-history-item{
+
+background:linear-gradient(
+135deg,
+#0f172a,
+#1e293b
+);
+
+border:1px solid rgba(
+255,255,255,.08
+);
+
+padding:14px;
+
+border-radius:16px;
+
+margin-bottom:12px;
+}
+.phone-row{
+    margin-top:8px;
+    color:#38bdf8;
+    font-size:12px;
+    font-weight:600;
+}
+
+.transfer-history-item{
+    background:#0f172a;
+    border:1px solid rgba(56,189,248,.15);
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+}
+.history-title{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+.history-amount{
+    color:#fff;
+    font-size:20px;
+    font-weight:700;
+    margin-top:8px;
+}
+
+.history-sub{
+    color:#64748b;
+    font-size:11px;
+    margin-top:5px;
+}
+
+.sent-badge{
+    background:rgba(239,68,68,.15);
+    color:#f87171;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:11px;
+}
+
+.received-badge{
+    background:rgba(34,197,94,.15);
+    color:#4ade80;
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:11px;
+}
+.btn-transfer{
+
+background:linear-gradient(
+135deg,
+#8b5cf6,
+#6366f1
+);
+
+color:#fff;
+font-weight:700;
+
+border:none;
+
+box-shadow:
+0 0 20px rgba(99,102,241,.35);
+
+}
+/* ACTION BUTTON ENHANCEMENTS */
+
+.btn-action:hover{
+    transform:translateY(-2px);
+}
+
+.btn-transfer{
+    box-shadow:0 10px 20px rgba(99,102,241,.25);
+}
+
+.btn-convert{
+    box-shadow:0 10px 20px rgba(239,68,68,.25);
+}
+
+.btn-withdraw{
+    box-shadow:0 10px 20px rgba(59,130,246,.25);
+}
+
+.btn-buy{
+    box-shadow:0 10px 20px rgba(34,197,94,.25);
 }
